@@ -18,15 +18,19 @@ import { useGroups } from '@/hooks/useGroups';
 import { useToday } from '@/hooks/useToday';
 import { useStreak } from '@/hooks/useStreak';
 import { GradientBackground } from '@/components/GradientBackground';
-import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, CompositeNavigationProp } from '@react-navigation/native';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { TabParamList } from '@/navigators/TabNavigator';
+import { RootStackParamList } from '@/Navigator';
 import { BRAND_COLORS, FONTS } from '@/constants';
 
 const { width } = Dimensions.get('window');
-type NavigationProp = BottomTabNavigationProp<TabParamList>;
+type NavigationProp = CompositeNavigationProp<
+  BottomTabNavigationProp<TabParamList>,
+  NativeStackNavigationProp<RootStackParamList>
+>;
 
 export default function DashboardScreen() {
   const { colors, isDark } = useTheme();
@@ -45,6 +49,11 @@ export default function DashboardScreen() {
   const handleQuickNav = (tabName: keyof TabParamList) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     navigation.navigate(tabName);
+  };
+
+  const handleGoToProfile = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    navigation.navigate('Profile');
   };
 
   // Extract muscles list from exercises in a group
@@ -73,19 +82,24 @@ export default function DashboardScreen() {
           <Animated.View entering={FadeInDown.duration(400)} style={styles.header}>
             <View style={styles.profileRow}>
               {/* Custom SVG Avatar */}
-              <View style={styles.avatarContainer}>
+              <TouchableOpacity
+                style={styles.avatarContainer}
+                onPress={handleGoToProfile}
+                activeOpacity={0.8}
+                accessibilityRole="button"
+              >
                 <Svg width="40" height="40" viewBox="0 0 40 40" fill="none">
                   <Circle cx="20" cy="20" r="20" fill="#E2D2FF" />
                   <Path d="M20,10 C22.76,10 25,12.24 25,15 C25,17.76 22.76,20 20,20 C17.24,20 15,17.76 15,15 C15,12.24 17.24,10 20,10 Z" fill="#0A0A0F" />
                   <Path d="M10,32 C10,26.48 14.48,22 20,22 C25.52,22 30,26.48 30,32" fill="none" stroke="#0A0A0F" strokeWidth="2.5" strokeLinecap="round" />
                 </Svg>
-              </View>
+              </TouchableOpacity>
 
               <View style={styles.headerTitleContainer}>
-                <Text style={styles.headerGreeting}>HI JAMES</Text>
+                <Text style={[styles.headerGreeting, { color: colors.text }]}>HI JAMES</Text>
                 <View style={styles.subGreetingRow}>
                   <Zap size={10} color={BRAND_COLORS.NEON_LIME} fill={BRAND_COLORS.NEON_LIME} />
-                  <Text style={styles.headerSub}>Fitness Freak</Text>
+                  <Text style={[styles.headerSub, { color: colors.textSecondary }]}>Fitness Freak</Text>
                 </View>
               </View>
             </View>
@@ -104,25 +118,24 @@ export default function DashboardScreen() {
               <View style={styles.progressCircleContainer}>
                 <Svg width="56" height="56" viewBox="0 0 36 36">
                   <Circle cx="18" cy="18" r="14" fill="none" stroke="rgba(10, 10, 15, 0.08)" strokeWidth="3.5" />
-                  <Circle 
-                    cx="18" 
-                    cy="18" 
-                    r="14" 
-                    fill="none" 
-                    stroke="#0A0A0F" 
-                    strokeWidth="3.5" 
-                    strokeDasharray="88" 
+                  <Circle
+                    cx="18"
+                    cy="18"
+                    r="14"
+                    fill="none"
+                    stroke="#0A0A0F"
+                    strokeWidth="3.5"
+                    strokeDasharray="88"
                     strokeDashoffset={88 - (88 * 72) / 100} // 72%
                     strokeLinecap="round"
                     transform="rotate(-90 18 18)"
                   />
-                  <SvgText 
-                    x="18" 
-                    y="20.5" 
-                    fontSize="7" 
-                    fontFamily={FONTS.digital} 
-                    fontWeight="900" 
-                    fill="#0A0A0F" 
+                  <SvgText
+                    x="18"
+                    y="20.5"
+                    fontSize="7"
+                    fontFamily={FONTS.digital}
+                    fill="#0A0A0F"
                     textAnchor="middle"
                   >
                     72%
@@ -164,8 +177,8 @@ export default function DashboardScreen() {
 
           {/* "Your plan" Header & Filter Chips */}
           <Animated.View entering={FadeInDown.delay(200).duration(400)} style={styles.yourPlanHeader}>
-            <Text style={styles.planSectionTitle}>Your plan</Text>
-            
+            <Text style={[styles.planSectionTitle, { color: colors.text }]}>Your plan</Text>
+
             <View style={styles.planChipsRow}>
               {(['All workouts', 'Lower body', 'Upper body'] as const).map((filter) => (
                 <TouchableOpacity
@@ -173,8 +186,8 @@ export default function DashboardScreen() {
                   style={[
                     styles.planFilterChip,
                     (activePlanFilter === 'All' && filter === 'All workouts') ||
-                    (activePlanFilter === 'Lower Body' && filter === 'Lower body') ||
-                    (activePlanFilter === 'Upper Body' && filter === 'Upper body')
+                      (activePlanFilter === 'Lower Body' && filter === 'Lower body') ||
+                      (activePlanFilter === 'Upper Body' && filter === 'Upper body')
                       ? { backgroundColor: '#FFFFFF', borderColor: '#FFFFFF' }
                       : { backgroundColor: 'rgba(255, 255, 255, 0.04)', borderColor: 'rgba(255, 255, 255, 0.1)' }
                   ]}
@@ -188,9 +201,9 @@ export default function DashboardScreen() {
                   <Text style={[
                     styles.planChipText,
                     (activePlanFilter === 'All' && filter === 'All workouts') ||
-                    (activePlanFilter === 'Lower Body' && filter === 'Lower body') ||
-                    (activePlanFilter === 'Upper Body' && filter === 'Upper body')
-                      ? { color: '#0A0A0F', fontWeight: '700' }
+                      (activePlanFilter === 'Lower Body' && filter === 'Lower body') ||
+                      (activePlanFilter === 'Upper Body' && filter === 'Upper body')
+                      ? { color: '#0A0A0F' }
                       : { color: '#8E8E93' }
                   ]}>
                     {filter}
@@ -206,74 +219,80 @@ export default function DashboardScreen() {
               // Default Fallback Routines matching exact reference styling if user hasn't added groups yet
               <>
                 <Animated.View entering={FadeInDown.delay(250).duration(450)}>
-                  <TouchableOpacity 
-                    style={[styles.routineCard, { backgroundColor: BRAND_COLORS.POWDER_BLUE }]}
+                  <TouchableOpacity
+                    style={[styles.routineCardShadow, { backgroundColor: BRAND_COLORS.POWDER_BLUE }]}
                     onPress={() => handleQuickNav('Today')}
+                    activeOpacity={0.9}
                   >
-                    <View style={styles.routineTimeBadge}>
-                      <Text style={styles.routineTimeBadgeText}>30 mins</Text>
-                    </View>
-
-                    <View style={styles.routineIllustration} pointerEvents="none">
-                      <Svg width="76" height="76" viewBox="0 0 24 24" fill="none">
-                        <Circle cx="12" cy="5" r="2.5" fill="#0A0A0F" opacity="0.3" />
-                        <Path d="M7,10 L12,13 L17,10 M12,13 L12,18 L9,22 M12,18 L15,22" stroke="#0A0A0F" strokeWidth="2.5" strokeLinecap="round" opacity="0.3" />
-                      </Svg>
-                    </View>
-
-                    <View style={styles.routineDetailsContainer}>
-                      <Text style={styles.routineName}>Lower body workout</Text>
-                      
-                      <View style={styles.routineTagsRow}>
-                        <View style={styles.routineBadgeTag}>
-                          <Text style={styles.routineBadgeText}>Cardio</Text>
-                        </View>
-                        <View style={styles.routineBadgeTag}>
-                          <Text style={styles.routineBadgeText}>5 exercises</Text>
-                        </View>
+                    <View style={styles.routineCardInner}>
+                      <View style={styles.routineTimeBadge}>
+                        <Text style={styles.routineTimeBadgeText}>30 mins</Text>
                       </View>
-                      
-                      <View style={styles.musclesSummaryPill}>
-                        <Text style={styles.musclesSummaryText}>
-                          Glutes / Squads / Hamstrings
-                        </Text>
+
+                      <View style={styles.routineIllustration} pointerEvents="none">
+                        <Svg width="76" height="76" viewBox="0 0 24 24" fill="none">
+                          <Circle cx="12" cy="5" r="2.5" fill="#0A0A0F" opacity="0.3" />
+                          <Path d="M7,10 L12,13 L17,10 M12,13 L12,18 L9,22 M12,18 L15,22" stroke="#0A0A0F" strokeWidth="2.5" strokeLinecap="round" opacity="0.3" />
+                        </Svg>
+                      </View>
+
+                      <View style={styles.routineDetailsContainer}>
+                        <Text style={styles.routineName}>Lower body workout</Text>
+
+                        <View style={styles.routineTagsRow}>
+                          <View style={styles.routineBadgeTag}>
+                            <Text style={styles.routineBadgeText}>Cardio</Text>
+                          </View>
+                          <View style={styles.routineBadgeTag}>
+                            <Text style={styles.routineBadgeText}>5 exercises</Text>
+                          </View>
+                        </View>
+
+                        <View style={styles.musclesSummaryPill}>
+                          <Text style={styles.musclesSummaryText}>
+                            Glutes / Squads / Hamstrings
+                          </Text>
+                        </View>
                       </View>
                     </View>
                   </TouchableOpacity>
                 </Animated.View>
 
                 <Animated.View entering={FadeInDown.delay(300).duration(450)}>
-                  <TouchableOpacity 
-                    style={[styles.routineCard, { backgroundColor: '#E6CFFF' }]}
+                  <TouchableOpacity
+                    style={[styles.routineCardShadow, { backgroundColor: '#E6CFFF' }]}
                     onPress={() => handleQuickNav('Today')}
+                    activeOpacity={0.9}
                   >
-                    <View style={styles.routineTimeBadge}>
-                      <Text style={styles.routineTimeBadgeText}>20 mins</Text>
-                    </View>
-
-                    <View style={styles.routineIllustration} pointerEvents="none">
-                      <Svg width="76" height="76" viewBox="0 0 24 24" fill="none">
-                        <Circle cx="12" cy="5" r="2.5" fill="#0A0A0F" opacity="0.3" />
-                        <Path d="M5,12 L12,9 L19,12 M12,9 L12,19 L7,22 M12,19 L17,22" stroke="#0A0A0F" strokeWidth="2.5" strokeLinecap="round" opacity="0.3" />
-                      </Svg>
-                    </View>
-
-                    <View style={styles.routineDetailsContainer}>
-                      <Text style={styles.routineName}>Upper body workout</Text>
-                      
-                      <View style={styles.routineTagsRow}>
-                        <View style={styles.routineBadgeTag}>
-                          <Text style={styles.routineBadgeText}>Strength</Text>
-                        </View>
-                        <View style={styles.routineBadgeTag}>
-                          <Text style={styles.routineBadgeText}>6 exercises</Text>
-                        </View>
+                    <View style={styles.routineCardInner}>
+                      <View style={styles.routineTimeBadge}>
+                        <Text style={styles.routineTimeBadgeText}>20 mins</Text>
                       </View>
-                      
-                      <View style={styles.musclesSummaryPill}>
-                        <Text style={styles.musclesSummaryText}>
-                          Chest / Back / Shoulders
-                        </Text>
+
+                      <View style={styles.routineIllustration} pointerEvents="none">
+                        <Svg width="76" height="76" viewBox="0 0 24 24" fill="none">
+                          <Circle cx="12" cy="5" r="2.5" fill="#0A0A0F" opacity="0.3" />
+                          <Path d="M5,12 L12,9 L19,12 M12,9 L12,19 L7,22 M12,19 L17,22" stroke="#0A0A0F" strokeWidth="2.5" strokeLinecap="round" opacity="0.3" />
+                        </Svg>
+                      </View>
+
+                      <View style={styles.routineDetailsContainer}>
+                        <Text style={styles.routineName}>Upper body workout</Text>
+
+                        <View style={styles.routineTagsRow}>
+                          <View style={styles.routineBadgeTag}>
+                            <Text style={styles.routineBadgeText}>Strength</Text>
+                          </View>
+                          <View style={styles.routineBadgeTag}>
+                            <Text style={styles.routineBadgeText}>6 exercises</Text>
+                          </View>
+                        </View>
+
+                        <View style={styles.musclesSummaryPill}>
+                          <Text style={styles.musclesSummaryText}>
+                            Chest / Back / Shoulders
+                          </Text>
+                        </View>
                       </View>
                     </View>
                   </TouchableOpacity>
@@ -298,45 +317,47 @@ export default function DashboardScreen() {
                     <Animated.View key={group.id} entering={FadeInDown.delay(index * 80 + 200).duration(450)}>
                       <TouchableOpacity
                         style={[
-                          styles.routineCard,
+                          styles.routineCardShadow,
                           { backgroundColor: isEven ? BRAND_COLORS.POWDER_BLUE : '#E6CFFF' }
                         ]}
                         onPress={() => handleQuickNav('Today')}
                         activeOpacity={0.9}
                       >
-                        <View style={styles.routineTimeBadge}>
-                          <Text style={styles.routineTimeBadgeText}>{duration} mins</Text>
-                        </View>
-
-                        <View style={styles.routineIllustration} pointerEvents="none">
-                          <Svg width="76" height="76" viewBox="0 0 24 24" fill="none">
-                            <Circle cx="12" cy="5" r="2.5" fill="#0A0A0F" opacity="0.25" />
-                            <Path 
-                              d="M6,10 L12,12 L18,10 M12,12 L12,18 L8,22 M12,18 L16,22" 
-                              stroke="#0A0A0F" 
-                              strokeWidth="2.5" 
-                              strokeLinecap="round" 
-                              opacity="0.25" 
-                            />
-                          </Svg>
-                        </View>
-
-                        <View style={styles.routineDetailsContainer}>
-                          <Text style={styles.routineName}>{group.name}</Text>
-                          
-                          <View style={styles.routineTagsRow}>
-                            <View style={styles.routineBadgeTag}>
-                              <Text style={styles.routineBadgeText}>Workout</Text>
-                            </View>
-                            <View style={styles.routineBadgeTag}>
-                              <Text style={styles.routineBadgeText}>{groupExs.length} exercises</Text>
-                            </View>
+                        <View style={styles.routineCardInner}>
+                          <View style={styles.routineTimeBadge}>
+                            <Text style={styles.routineTimeBadgeText}>{duration} mins</Text>
                           </View>
-                          
-                          <View style={styles.musclesSummaryPill}>
-                            <Text style={styles.musclesSummaryText}>
-                              {musclesList}
-                            </Text>
+
+                          <View style={styles.routineIllustration} pointerEvents="none">
+                            <Svg width="76" height="76" viewBox="0 0 24 24" fill="none">
+                              <Circle cx="12" cy="5" r="2.5" fill="#0A0A0F" opacity="0.25" />
+                              <Path
+                                d="M6,10 L12,12 L18,10 M12,12 L12,18 L8,22 M12,18 L16,22"
+                                stroke="#0A0A0F"
+                                strokeWidth="2.5"
+                                strokeLinecap="round"
+                                opacity="0.25"
+                              />
+                            </Svg>
+                          </View>
+
+                          <View style={styles.routineDetailsContainer}>
+                            <Text style={styles.routineName}>{group.name}</Text>
+
+                            <View style={styles.routineTagsRow}>
+                              <View style={styles.routineBadgeTag}>
+                                <Text style={styles.routineBadgeText}>Workout</Text>
+                              </View>
+                              <View style={styles.routineBadgeTag}>
+                                <Text style={styles.routineBadgeText}>{groupExs.length} exercises</Text>
+                              </View>
+                            </View>
+
+                            <View style={styles.musclesSummaryPill}>
+                              <Text style={styles.musclesSummaryText}>
+                                {musclesList}
+                              </Text>
+                            </View>
                           </View>
                         </View>
                       </TouchableOpacity>
@@ -360,7 +381,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: 20,
-    paddingTop: Platform.OS === 'ios' ? 60 : 40,
+    paddingTop: Platform.OS === 'ios' ? 72 : 52,
     paddingBottom: 110,
   },
   header: {
@@ -385,8 +406,7 @@ const styles = StyleSheet.create({
   },
   headerGreeting: {
     fontSize: 16,
-    fontFamily: 'Syne-Bold',
-    fontWeight: '800',
+    fontFamily: FONTS.display,
     color: '#FFFFFF',
     textTransform: 'uppercase',
   },
@@ -397,8 +417,7 @@ const styles = StyleSheet.create({
   },
   headerSub: {
     fontSize: 10,
-    fontFamily: 'SpaceGrotesk-Medium',
-    fontWeight: '600',
+    fontFamily: FONTS.medium,
     color: '#8E8E93',
   },
   notificationBtn: {
@@ -429,11 +448,17 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     marginBottom: 24,
     minHeight: 168,
-    shadowColor: BRAND_COLORS.NEON_LIME,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.18,
-    shadowRadius: 16,
-    elevation: 8,
+    ...Platform.select({
+      ios: {
+        shadowColor: BRAND_COLORS.NEON_LIME,
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.18,
+        shadowRadius: 16,
+      },
+      android: {
+        elevation: 6,
+      },
+    }),
   },
   progressCircleContainer: {
     position: 'absolute',
@@ -446,21 +471,18 @@ const styles = StyleSheet.create({
   },
   progressMetaTitle: {
     fontSize: 11,
-    fontFamily: 'SpaceGrotesk-Medium',
-    fontWeight: '600',
+    fontFamily: FONTS.medium,
     color: 'rgba(10, 10, 15, 0.6)',
   },
   progressWorkoutTitle: {
     fontSize: 24,
-    fontFamily: 'Syne-Bold',
-    fontWeight: '800',
+    fontFamily: FONTS.display,
     color: '#0A0A0F',
     letterSpacing: -0.5,
   },
   progressWorkoutSubtitle: {
     fontSize: 11,
-    fontFamily: 'SpaceGrotesk-Medium',
-    fontWeight: '600',
+    fontFamily: FONTS.medium,
     color: 'rgba(10, 10, 15, 0.6)',
   },
   progressFooter: {
@@ -481,14 +503,12 @@ const styles = StyleSheet.create({
   },
   caloriesText: {
     fontSize: 14,
-    fontFamily: 'Orbitron-Bold',
-    fontWeight: '800',
+    fontFamily: FONTS.digital,
     color: '#FFFFFF',
   },
   caloriesUnit: {
     fontSize: 9,
-    fontFamily: 'SpaceGrotesk-Bold',
-    fontWeight: '700',
+    fontFamily: FONTS.bold,
     color: BRAND_COLORS.NEON_LIME,
   },
   arrowIconContainer: {
@@ -512,8 +532,7 @@ const styles = StyleSheet.create({
   },
   planSectionTitle: {
     fontSize: 20,
-    fontFamily: 'Syne-Bold',
-    fontWeight: '800',
+    fontFamily: FONTS.display,
     color: '#FFFFFF',
   },
   planChipsRow: {
@@ -528,24 +547,33 @@ const styles = StyleSheet.create({
   },
   planChipText: {
     fontSize: 12,
-    fontFamily: 'SpaceGrotesk-Bold',
-    fontWeight: '600',
+    fontFamily: FONTS.bold,
   },
   routinesList: {
     gap: 16,
   },
-  routineCard: {
+  routineCardShadow: {
     borderRadius: 28,
+    minHeight: 154,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.04,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
+  },
+  routineCardInner: {
+    borderRadius: 28,
+    overflow: 'hidden',
     padding: 22,
     minHeight: 154,
-    position: 'relative',
-    overflow: 'hidden',
     justifyContent: 'flex-end',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.04,
-    shadowRadius: 8,
-    elevation: 2,
+    width: '100%',
   },
   routineTimeBadge: {
     position: 'absolute',
@@ -558,14 +586,13 @@ const styles = StyleSheet.create({
   },
   routineTimeBadgeText: {
     fontSize: 11,
-    fontFamily: 'Orbitron-Bold',
-    fontWeight: '800',
+    fontFamily: FONTS.digital,
     color: '#0A0A0F',
   },
   routineIllustration: {
     position: 'absolute',
-    top: 6,
-    left: 6,
+    right: 10,
+    bottom: -10,
   },
   routineDetailsContainer: {
     gap: 8,
@@ -573,8 +600,7 @@ const styles = StyleSheet.create({
   },
   routineName: {
     fontSize: 20,
-    fontFamily: 'Syne-Bold',
-    fontWeight: '800',
+    fontFamily: FONTS.display,
     color: '#0A0A0F',
     letterSpacing: -0.3,
   },
@@ -590,8 +616,7 @@ const styles = StyleSheet.create({
   },
   routineBadgeText: {
     fontSize: 10,
-    fontFamily: 'SpaceGrotesk-Medium',
-    fontWeight: '600',
+    fontFamily: FONTS.medium,
     color: 'rgba(10, 10, 15, 0.7)',
   },
   musclesSummaryPill: {
@@ -603,8 +628,7 @@ const styles = StyleSheet.create({
   },
   musclesSummaryText: {
     fontSize: 11,
-    fontFamily: 'SpaceGrotesk-Bold',
-    fontWeight: '700',
+    fontFamily: FONTS.bold,
     color: '#0A0A0F',
   },
 });

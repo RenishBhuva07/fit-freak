@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react';
+
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   Dimensions,
+  Platform,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import Animated, { FadeIn, FadeInDown, ZoomIn } from 'react-native-reanimated';
@@ -14,6 +15,7 @@ import { useStreak } from '@/hooks/useStreak';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { GradientBackground } from '@/components/GradientBackground';
 import { LinearGradient } from 'expo-linear-gradient';
+import { BRAND_COLORS, FONTS } from '@/constants';
 
 const { width } = Dimensions.get('window');
 
@@ -52,6 +54,9 @@ export default function StatsScreen() {
         return <View style={[styles.emptyCircle, { borderColor: colors.border }]} />;
     }
   };
+
+  // Colors taken from the three summary cards: Total Workouts, Total Exercises, This Month
+  const weeklyBoxColors = ['#E6CFFF', '#C4D6FF', BRAND_COLORS.NEON_LIME];
 
   const getDayBackgroundColor = (status: string) => {
     switch (status) {
@@ -165,15 +170,20 @@ export default function StatsScreen() {
           showsVerticalScrollIndicator={false}
         >
           {/* Streak Section */}
-          <Animated.View entering={ZoomIn.delay(100).duration(500)}>
+          <Animated.View
+            entering={ZoomIn.delay(100).duration(500)}
+            style={styles.streakSectionShadow}
+          >
             <LinearGradient
               colors={['#FF6B6B', '#FFE66D']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
-              style={styles.streakSection}
+              style={styles.streakSectionInner}
             >
+              <View style={styles.streakBackgroundIcon} pointerEvents="none">
+                <Star size={140} color="rgba(255,255,255,0.14)" strokeWidth={1.6} />
+              </View>
               <View style={styles.streakMain}>
-                <Star size={52} color="#FFFFFF" strokeWidth={1.5} />
                 <Text style={styles.streakNumber}>{streakMeta.currentStreak}</Text>
               </View>
               <Text style={styles.streakLabel}>Day Streak</Text>
@@ -195,36 +205,44 @@ export default function StatsScreen() {
                 This Week
               </Text>
               <View
-                style={[
-                  styles.weeklyGrid,
-                  {
-                    backgroundColor: isDark
-                      ? 'rgba(255, 255, 255, 0.05)'
-                      : 'rgba(255, 255, 255, 0.5)',
-                  },
-                ]}
+                style={styles.weeklyGridShadow}
               >
-                {weeklyOverview.map((day, index) => (
-                  <Animated.View
-                    key={day.date}
-                    entering={FadeInDown.delay(index * 70 + 300).duration(400)}
-                    style={[
-                      styles.dayCell,
-                      { backgroundColor: getDayBackgroundColor(day.status) },
-                      day.date === today && {
-                        borderColor: colors.accent,
-                        borderWidth: 2,
-                      },
-                    ]}
-                  >
-                    <Text style={[styles.dayLabel, { color: colors.textSecondary }]}>
-                      {day.label}
-                    </Text>
-                    <View style={styles.dayIconContainer}>
-                      {renderDayIcon(day.status)}
-                    </View>
-                  </Animated.View>
-                ))}
+                <View
+                  style={[
+                    styles.weeklyGridInner,
+                    {
+                      backgroundColor: isDark ? BRAND_COLORS.CHARCOAL_CARD : '#0A0A0F',
+                      borderColor: isDark ? 'rgba(255, 255, 255, 0.06)' : 'rgba(0, 0, 0, 0.04)',
+                    },
+                  ]}
+                >
+                  {weeklyOverview.map((day, index) => {
+                    // fill weekly boxes in order with the three summary card colors
+                    const boxFill = weeklyBoxColors[index % weeklyBoxColors.length];
+                    const dayBg = boxFill;
+                    return (
+                      <Animated.View
+                        key={day.date}
+                        entering={FadeInDown.delay(index * 70 + 300).duration(400)}
+                        style={[
+                          styles.dayCell,
+                          { backgroundColor: dayBg },
+                          day.date === today && {
+                            borderColor: colors.accent,
+                            borderWidth: 2,
+                          },
+                        ]}
+                      >
+                        <Text style={[styles.dayLabel, { color: colors.textSecondary }]}>
+                          {day.label}
+                        </Text>
+                        <View style={styles.dayIconContainer}>
+                          {renderDayIcon(day.status)}
+                        </View>
+                      </Animated.View>
+                    );
+                  })}
+                </View>
               </View>
             </View>
           </Animated.View>
@@ -235,110 +253,90 @@ export default function StatsScreen() {
             <View style={styles.summaryGrid}>
               <Animated.View
                 entering={FadeInDown.delay(300).duration(400)}
-                style={[
-                  styles.summaryCard,
-                  {
-                    backgroundColor: isDark
-                      ? 'rgba(255, 255, 255, 0.05)'
-                      : 'rgba(255, 255, 255, 0.6)',
-                  },
-                ]}
+                style={styles.summaryCardShadow}
               >
-                <View style={styles.summaryIconContainer}>
-                  <LinearGradient
-                    colors={['#667eea', '#764ba2']}
-                    style={styles.summaryIconGradient}
-                  >
-                    <Dumbbell size={24} color="#FFFFFF" strokeWidth={2} />
-                  </LinearGradient>
+                <View
+                  style={[
+                    styles.summaryCardInner,
+                    { backgroundColor: '#E6CFFF', borderColor: 'rgba(0,0,0,0.04)' },
+                  ]}
+                >
+                  <View style={styles.backgroundIcon} pointerEvents="none">
+                    <Dumbbell size={96} color="rgba(10,10,15,0.06)" strokeWidth={1.6} />
+                  </View>
+                  <Text style={[styles.summaryNumber, { color: '#0A0A0F' }]}>
+                    {stats.totalWorkouts}
+                  </Text>
+                  <Text style={[styles.summaryLabel, { color: '#0A0A0F' }]}>
+                    Total Workouts
+                  </Text>
                 </View>
-                <Text style={[styles.summaryNumber, { color: colors.text }]}>
-                  {stats.totalWorkouts}
-                </Text>
-                <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>
-                  Total Workouts
-                </Text>
               </Animated.View>
 
               <Animated.View
                 entering={FadeInDown.delay(400).duration(400)}
-                style={[
-                  styles.summaryCard,
-                  {
-                    backgroundColor: isDark
-                      ? 'rgba(255, 255, 255, 0.05)'
-                      : 'rgba(255, 255, 255, 0.6)',
-                  },
-                ]}
+                style={styles.summaryCardShadow}
               >
-                <View style={styles.summaryIconContainer}>
-                  <LinearGradient
-                    colors={['#11998e', '#38ef7d']}
-                    style={styles.summaryIconGradient}
-                  >
-                    <Trophy size={24} color="#FFFFFF" strokeWidth={2} />
-                  </LinearGradient>
+                <View
+                  style={[
+                    styles.summaryCardInner,
+                    { backgroundColor: '#C4D6FF', borderColor: 'rgba(0,0,0,0.04)' },
+                  ]}
+                >
+                  <View style={styles.backgroundIcon} pointerEvents="none">
+                    <Trophy size={96} color="rgba(10,10,15,0.06)" strokeWidth={1.6} />
+                  </View>
+                  <Text style={[styles.summaryNumber, { color: '#0A0A0F' }]}>
+                    {stats.totalExercises}
+                  </Text>
+                  <Text style={[styles.summaryLabel, { color: '#0A0A0F' }]}>
+                    Total Exercises
+                  </Text>
                 </View>
-                <Text style={[styles.summaryNumber, { color: colors.text }]}>
-                  {stats.totalExercises}
-                </Text>
-                <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>
-                  Total Exercises
-                </Text>
               </Animated.View>
 
               <Animated.View
                 entering={FadeInDown.delay(500).duration(400)}
-                style={[
-                  styles.summaryCard,
-                  {
-                    backgroundColor: isDark
-                      ? 'rgba(255, 255, 255, 0.05)'
-                      : 'rgba(255, 255, 255, 0.6)',
-                  },
-                ]}
+                style={styles.summaryCardShadow}
               >
-                <View style={styles.summaryIconContainer}>
-                  <LinearGradient
-                    colors={['#f093fb', '#f5576c']}
-                    style={styles.summaryIconGradient}
-                  >
-                    <Calendar size={24} color="#FFFFFF" strokeWidth={2} />
-                  </LinearGradient>
+                <View
+                  style={[
+                    styles.summaryCardInner,
+                    { backgroundColor: BRAND_COLORS.NEON_LIME, borderColor: 'rgba(0,0,0,0.04)' },
+                  ]}
+                >
+                  <View style={styles.backgroundIcon} pointerEvents="none">
+                    <Calendar size={96} color="rgba(10,10,15,0.06)" strokeWidth={1.6} />
+                  </View>
+                  <Text style={[styles.summaryNumber, { color: '#0A0A0F' }]}>
+                    {stats.monthlyWorkouts}
+                  </Text>
+                  <Text style={[styles.summaryLabel, { color: '#0A0A0F' }]}>
+                    This Month
+                  </Text>
                 </View>
-                <Text style={[styles.summaryNumber, { color: colors.text }]}>
-                  {stats.monthlyWorkouts}
-                </Text>
-                <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>
-                  This Month
-                </Text>
               </Animated.View>
 
               <Animated.View
                 entering={FadeInDown.delay(600).duration(400)}
-                style={[
-                  styles.summaryCard,
-                  {
-                    backgroundColor: isDark
-                      ? 'rgba(255, 255, 255, 0.05)'
-                      : 'rgba(255, 255, 255, 0.6)',
-                  },
-                ]}
+                style={styles.summaryCardShadow}
               >
-                <View style={styles.summaryIconContainer}>
-                  <LinearGradient
-                    colors={['#FF6B6B', '#FFE66D']}
-                    style={styles.summaryIconGradient}
-                  >
-                    <Star size={24} color="#FFFFFF" strokeWidth={2} />
-                  </LinearGradient>
+                <View
+                  style={[
+                    styles.summaryCardInner,
+                    { backgroundColor: BRAND_COLORS.CHARCOAL_CARD, borderColor: 'rgba(255,255,255,0.06)' },
+                  ]}
+                >
+                  <View style={styles.backgroundIcon} pointerEvents="none">
+                    <Star size={96} color="rgba(255,255,255,0.06)" strokeWidth={1.6} />
+                  </View>
+                  <Text style={[styles.summaryNumber, { color: '#FFFFFF' }]}>
+                    {stats.bestStreak}
+                  </Text>
+                  <Text style={[styles.summaryLabel, { color: '#FFFFFF' }]}>
+                    Best Streak
+                  </Text>
                 </View>
-                <Text style={[styles.summaryNumber, { color: colors.text }]}>
-                  {stats.bestStreak}
-                </Text>
-                <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>
-                  Best Streak
-                </Text>
               </Animated.View>
             </View>
           </View>
@@ -366,31 +364,36 @@ export default function StatsScreen() {
                 <Animated.View
                   key={record.date}
                   entering={FadeInDown.delay(index * 40).duration(400)}
-                  style={[
-                    styles.historyCard,
-                    {
-                      backgroundColor: isDark
-                        ? 'rgba(255, 255, 255, 0.05)'
-                        : 'rgba(255, 255, 255, 0.6)',
-                    },
-                  ]}
+                  style={styles.historyCardShadow}
                 >
-                  <View style={styles.historyLeft}>
-                    <Text style={[styles.historyDate, { color: colors.text }]}>
-                      {formatDate(record.date)}
-                    </Text>
-                    {record.groupName && (
-                      <Text style={[styles.historyGroup, { color: colors.textSecondary }]}>
-                        {record.groupName}
+                  <View
+                    style={[
+                      styles.historyCardInner,
+                      {
+                        backgroundColor: Platform.OS === 'android'
+                          ? (isDark ? BRAND_COLORS.CHARCOAL_CARD : '#ffffff')
+                          : (isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(255, 255, 255, 0.6)'),
+                        borderColor: isDark ? 'rgba(255, 255, 255, 0.06)' : 'rgba(0, 0, 0, 0.04)',
+                      },
+                    ]}
+                  >
+                    <View style={styles.historyLeft}>
+                      <Text style={[styles.historyDate, { color: colors.text }]}>
+                        {formatDate(record.date)}
                       </Text>
-                    )}
-                  </View>
-                  <View style={styles.historyRight}>
-                    <Text style={[styles.historyProgress, { color: colors.text }]}>
-                      {record.completedExercises} /{' '}
-                      {record.totalExercises || record.completedExercises}
-                    </Text>
-                    {renderStatusBadge(record)}
+                      {record.groupName && (
+                        <Text style={[styles.historyGroup, { color: colors.textSecondary }]}>
+                          {record.groupName}
+                        </Text>
+                      )}
+                    </View>
+                    <View style={styles.historyRight}>
+                      <Text style={[styles.historyProgress, { color: colors.text }]}>
+                        {record.completedExercises} /{' '}
+                        {record.totalExercises || record.completedExercises}
+                      </Text>
+                      {renderStatusBadge(record)}
+                    </View>
                   </View>
                 </Animated.View>
               ))
@@ -411,12 +414,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 20,
-    paddingTop: 60,
+    paddingTop: Platform.OS === 'ios' ? 72 : 52,
     paddingBottom: 16,
   },
   title: {
     fontSize: 28,
-    fontFamily: 'Syne',
+    fontFamily: FONTS.display,
     fontWeight: '800',
   },
   scrollView: {
@@ -426,28 +429,41 @@ const styles = StyleSheet.create({
     padding: 20,
     paddingBottom: 110,
   },
-  streakSection: {
+  streakSectionShadow: {
+    borderRadius: 28,
+    marginBottom: 24,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#FF6B6B',
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.25,
+        shadowRadius: 16,
+      },
+      android: {
+        elevation: 6,
+      },
+    }),
+  },
+  streakSectionInner: {
     alignItems: 'center',
     padding: 32,
     borderRadius: 28,
-    marginBottom: 24,
+    overflow: 'hidden',
   },
   streakMain: {
-    flexDirection: 'row',
     alignItems: 'center',
-    gap: 16,
     marginBottom: 8,
   },
   streakNumber: {
     fontSize: 68,
-    fontFamily: 'Orbitron',
+    fontFamily: FONTS.digital,
     fontWeight: '800',
     color: '#FFFFFF',
     letterSpacing: -2,
   },
   streakLabel: {
     fontSize: 20,
-    fontFamily: 'SpaceGrotesk',
+    fontFamily: FONTS.bold,
     fontWeight: '600',
     color: '#FFFFFF',
     marginBottom: 14,
@@ -464,7 +480,7 @@ const styles = StyleSheet.create({
   },
   bestStreakText: {
     fontSize: 14,
-    fontFamily: 'SpaceGrotesk',
+    fontFamily: FONTS.medium,
     fontWeight: '600',
     color: '#FFFFFF',
   },
@@ -473,17 +489,34 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 20,
-    fontFamily: 'Syne',
+    fontFamily: FONTS.display,
     fontWeight: '800',
     marginBottom: 14,
     letterSpacing: -0.3,
   },
-  weeklyGrid: {
+  weeklyGridShadow: {
+    borderRadius: 22,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.04,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
+  },
+  weeklyGridInner: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     padding: 18,
     borderRadius: 22,
+    borderWidth: 1,
+    overflow: 'hidden',
     gap: 8,
+    width: '100%',
   },
   dayCell: {
     flex: 1,
@@ -493,7 +526,7 @@ const styles = StyleSheet.create({
   },
   dayLabel: {
     fontSize: 12,
-    fontFamily: 'SpaceGrotesk',
+    fontFamily: FONTS.bold,
     fontWeight: '700',
     marginBottom: 10,
     letterSpacing: 0.3,
@@ -518,11 +551,28 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: 14,
   },
-  summaryCard: {
+  summaryCardShadow: {
     width: (width - 54) / 2,
-    padding: 20,
     borderRadius: 22,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.04,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
+  },
+  summaryCardInner: {
+    borderRadius: 22,
+    borderWidth: 1,
+    overflow: 'hidden',
+    padding: 20,
     alignItems: 'center',
+    width: '100%',
   },
   summaryIconContainer: {
     marginBottom: 12,
@@ -536,17 +586,33 @@ const styles = StyleSheet.create({
   },
   summaryNumber: {
     fontSize: 32,
-    fontFamily: 'Orbitron',
+    fontFamily: FONTS.digital,
     fontWeight: '800',
     marginBottom: 6,
     letterSpacing: -1,
   },
   summaryLabel: {
     fontSize: 12,
-    fontFamily: 'SpaceGrotesk',
-    fontWeight: '600',
+    fontFamily: FONTS.bold,
+    fontWeight: '700',
     textAlign: 'center',
     letterSpacing: 0.2,
+  },
+  backgroundIcon: {
+    position: 'absolute',
+    right: -12,
+    top: -18,
+    opacity: 0.9,
+    transform: [{ scale: 1 }],
+    zIndex: 0,
+  },
+  streakBackgroundIcon: {
+    position: 'absolute',
+    right: 10,
+    top: 6,
+    opacity: 0.9,
+    zIndex: 0,
+    transform: [{ scale: 1 }],
   },
   historySection: {
     marginBottom: 24,
@@ -558,30 +624,47 @@ const styles = StyleSheet.create({
   },
   emptyHistoryText: {
     fontSize: 15,
-    fontFamily: 'SpaceGrotesk',
+    fontFamily: FONTS.medium,
     textAlign: 'center',
     fontWeight: '500',
   },
-  historyCard: {
+  historyCardShadow: {
+    borderRadius: 18,
+    marginBottom: 12,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.03,
+        shadowRadius: 6,
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
+  },
+  historyCardInner: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: 18,
     borderRadius: 18,
-    marginBottom: 12,
+    borderWidth: 1,
+    overflow: 'hidden',
+    width: '100%',
   },
   historyLeft: {
     flex: 1,
   },
   historyDate: {
     fontSize: 16,
-    fontFamily: 'Syne',
+    fontFamily: FONTS.display,
     fontWeight: '800',
     marginBottom: 4,
   },
   historyGroup: {
     fontSize: 14,
-    fontFamily: 'SpaceGrotesk',
+    fontFamily: FONTS.regular,
     fontWeight: '500',
   },
   historyRight: {
@@ -589,7 +672,7 @@ const styles = StyleSheet.create({
   },
   historyProgress: {
     fontSize: 15,
-    fontFamily: 'Orbitron',
+    fontFamily: FONTS.digital,
     fontWeight: '700',
     marginBottom: 8,
     letterSpacing: 0.2,
@@ -601,7 +684,7 @@ const styles = StyleSheet.create({
   },
   statusBadgeText: {
     fontSize: 12,
-    fontFamily: 'SpaceGrotesk',
+    fontFamily: FONTS.bold,
     fontWeight: '700',
     letterSpacing: 0.2,
   },

@@ -11,8 +11,8 @@ export function GradientBackground({ children }: GradientBackgroundProps) {
   const { isDark } = useTheme();
 
   const colors = isDark
-    ? (['#0a0a0f', '#141428', '#1a1a3e', '#0f0f1e'] as const)
-    : (['#ffffff', '#f8fafc', '#eef2f7', '#e8eeef'] as const);
+    ? (['#0B0B0B', '#0F0F12', '#141418', '#0B0B0B'] as const)
+    : (['#ffffff', '#f8fafc', '#f1f5f9', '#e2e8f0'] as const);
 
   return (
     <LinearGradient

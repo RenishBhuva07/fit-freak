@@ -77,9 +77,9 @@ export const FONTS = {
   regular: 'SpaceGrotesk-Regular',
   medium: 'SpaceGrotesk-Medium',
   bold: 'SpaceGrotesk-Bold',
-  display: 'Syne-Bold',
-  displayExtra: 'Syne-ExtraBold',
-  digital: 'Orbitron-Bold',
+  display: 'SpaceGrotesk-Bold',
+  displayExtra: 'SpaceGrotesk-Bold',
+  digital: 'SpaceGrotesk-Bold',
 };
 
 export const LIGHT_THEME: ThemeColors = {

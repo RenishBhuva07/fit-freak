@@ -8,12 +8,15 @@ import {
 import { navigationRef } from '@/utils/NavigationService';
 import TabNavigator from '@/navigators/TabNavigator';
 
+import ProfileScreen from '@/screens/ProfileScreen';
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Route param list — extend this as you add modal / auth screens
 // ─────────────────────────────────────────────────────────────────────────────
 export type RootStackParamList = {
   /** Bottom tabs (Exercises, Groups, Today, Stats) */
   MainTabs: undefined;
+  Profile: undefined;
   // Add modal screens here, e.g.:
   // ExerciseDetail: { exerciseId: string };
   // Auth: undefined;
@@ -44,6 +47,9 @@ export default function Navigator() {
       >
         {/* Main tab bar */}
         <Stack.Screen name="MainTabs" component={TabNavigator} />
+        
+        {/* Profile Details */}
+        <Stack.Screen name="Profile" component={ProfileScreen} />
 
         {/*
          * ── Add modal / stack screens below ──────────────────────────────────

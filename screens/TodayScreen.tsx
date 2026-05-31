@@ -8,13 +8,14 @@ import {
   Dimensions,
   Platform,
   Image,
+  Alert,
 } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
 import Animated, {
   FadeInDown,
-  ZoomIn,
 } from 'react-native-reanimated';
-import { Play, Pause, ChevronLeft, ChevronRight, Zap, RefreshCw, CheckCircle2, ChevronRight as ChevronRightIcon } from 'lucide-react-native';
+import { Play, Pause, ChevronLeft, ChevronRight, RefreshCw, ChevronRight as ChevronRightIcon } from 'lucide-react-native';
 import Svg, { Path, Circle, G, Text as SvgText } from 'react-native-svg';
 import { useTheme } from '@/hooks/useTheme';
 import { useExercises } from '@/hooks/useExercises';
@@ -35,7 +36,7 @@ const getCalendarDays = () => {
   const days = [];
   const today = new Date();
   const currentDayOfWeek = today.getDay(); // 0 is Sunday
-  
+
   // Calculate start of the week (Monday)
   const mondayOffset = currentDayOfWeek === 0 ? -6 : 1 - currentDayOfWeek;
   const monday = new Date(today);
@@ -74,6 +75,51 @@ export default function TodayScreen() {
     showCelebration,
     dismissCelebration,
   } = useToday(exercises, groups);
+
+  const navigation = useNavigation<any>();
+  const currentMonthYear = new Date().toLocaleDateString('en-US', {
+    month: 'long',
+    year: 'numeric',
+  });
+  const todayDayName = new Date().toLocaleDateString('en-US', { weekday: 'long' });
+
+  const handleChallengePress = () => {
+    if (todaysGroups.length > 0) {
+      // Prioritize the first group that actually has exercises, falling back to the first group
+      const activeGroup = todaysGroups.find(g => g.exerciseIds.length > 0) || todaysGroups[0];
+      if (activeGroup.exerciseIds.length === 0) {
+        Alert.alert(
+          `${activeGroup.name}`,
+          `Your "${activeGroup.name}" doesn't have any exercises yet! Add exercises to this group under the Groups tab first.`,
+          [
+            { text: 'Cancel', style: 'cancel' },
+            {
+              text: 'Go to Groups',
+              onPress: () => {
+                navigation.navigate('Groups');
+              },
+            },
+          ]
+        );
+      } else {
+        handleStartWorkout(activeGroup.id);
+      }
+    } else {
+      Alert.alert(
+        "No Workout Group",
+        `There are no workout groups scheduled for today (${todayDayName}). Would you like to create one under the Groups tab?`,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Go to Groups',
+            onPress: () => {
+              navigation.navigate('Groups');
+            },
+          },
+        ]
+      );
+    }
+  };
 
   const [activeTab, setActiveTab] = useState<'All' | 'Running' | 'Cycling'>('All');
   const [workoutPaused, setWorkoutPaused] = useState(false);
@@ -132,13 +178,13 @@ export default function TodayScreen() {
     return (
       <View style={styles.workoutContainer}>
         <StatusBar style="light" />
-        
+
         {/* Full Screen Background Graphic of Exercise */}
         <LinearGradient
           colors={['rgba(10, 10, 15, 0.4)', 'rgba(10, 10, 15, 0.95)']}
           style={[StyleSheet.absoluteFillObject, { zIndex: 1 }]}
         />
-        
+
         <View style={styles.workoutBgPlaceholder}>
           {/* Stylized background lines mimicking the reference squat photo context */}
           <Svg height="100%" width="100%" viewBox="0 0 100 100" preserveAspectRatio="none">
@@ -147,7 +193,7 @@ export default function TodayScreen() {
             <Circle cx="50" cy="40" r="40" fill="none" stroke="#25252b" strokeWidth="0.2" />
             <Path d="M20,10 L80,90 M80,10 L20,90" stroke="#25252b" strokeWidth="0.1" />
           </Svg>
-          
+
           <View style={styles.squatTrainerTextContainer}>
             <Text style={styles.trainerOverlayWord}>FITNESS</Text>
           </View>
@@ -159,7 +205,7 @@ export default function TodayScreen() {
             <Text style={styles.workoutHeaderTitle}>Your Workout</Text>
             <Text style={styles.workoutHeaderSubtitle}>{activeWorkoutGroup.name}</Text>
           </View>
-          
+
           <View style={styles.workoutHeaderRight}>
             <View style={styles.burnedContainer}>
               <Text style={styles.burnedLabel}>Kcal Burned</Text>
@@ -167,16 +213,16 @@ export default function TodayScreen() {
             </View>
             <View style={styles.caloriesIndicatorBars}>
               {[1, 2, 3, 4, 5].map((i) => (
-                <View 
-                  key={i} 
+                <View
+                  key={i}
                   style={[
-                    styles.indicatorBar, 
+                    styles.indicatorBar,
                     i <= 3 ? { backgroundColor: '#E2D2FF' } : { backgroundColor: 'rgba(255, 255, 255, 0.2)' }
-                  ]} 
+                  ]}
                 />
               ))}
             </View>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.pauseButton}
               onPress={() => {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -189,8 +235,8 @@ export default function TodayScreen() {
         </View>
 
         {/* Scrollable list of exercises overlaid in workout */}
-        <ScrollView 
-          style={[styles.workoutScroll, { zIndex: 5 }]} 
+        <ScrollView
+          style={[styles.workoutScroll, { zIndex: 5 }]}
           contentContainerStyle={styles.workoutScrollContent}
           showsVerticalScrollIndicator={false}
         >
@@ -231,7 +277,7 @@ export default function TodayScreen() {
         {/* Premium white curved timer overlay panel */}
         <View style={[styles.workoutFooterPanel, { zIndex: 15 }]}>
           <View style={styles.panelHandle} />
-          
+
           <View style={styles.timerControlRow}>
             <View style={styles.timeStatsColumn}>
               <Text style={styles.timeStatsLabel}>Elapsed</Text>
@@ -268,8 +314,8 @@ export default function TodayScreen() {
       <View style={styles.container}>
         <StatusBar style={isDark ? 'light' : 'dark'} />
 
-        <ScrollView 
-          style={styles.scrollView} 
+        <ScrollView
+          style={styles.scrollView}
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
@@ -277,7 +323,7 @@ export default function TodayScreen() {
           <Animated.View entering={FadeInDown.duration(400)} style={styles.header}>
             <Text style={[styles.title, { color: colors.text }]}>Your Activity</Text>
             <View style={styles.monthSelector}>
-              <Text style={styles.monthText}>May 2024</Text>
+              <Text style={styles.monthText}>{currentMonthYear}</Text>
               <View style={styles.monthArrows}>
                 <TouchableOpacity style={styles.monthArrowBtn}>
                   <ChevronLeft size={14} color="#0A0A0F" strokeWidth={2.5} />
@@ -301,7 +347,7 @@ export default function TodayScreen() {
                 ]}>
                   <Text style={[
                     styles.calendarDateNum,
-                    day.isToday ? { color: '#0A0A0F', fontWeight: '800' } : { color: '#A5A5AF' }
+                    day.isToday ? { color: '#0A0A0F' } : { color: '#A5A5AF' }
                   ]}>
                     {day.dateNum}
                   </Text>
@@ -312,42 +358,44 @@ export default function TodayScreen() {
 
           {/* "Today's Challenge" Banner Card */}
           <Animated.View entering={FadeInDown.delay(150).duration(450)}>
-            <TouchableOpacity 
-              style={styles.challengeCard} 
+            <TouchableOpacity
+              style={styles.challengeCardShadow}
               activeOpacity={0.95}
-              onPress={() => todaysGroups.length > 0 && handleStartWorkout(todaysGroups[0].id)}
+              onPress={handleChallengePress}
             >
-              {/* Graphic background lines in SVG */}
-              <View style={StyleSheet.absoluteFillObject} pointerEvents="none">
-                <Svg height="100%" width="100%" viewBox="0 0 100 100" preserveAspectRatio="none">
-                  <Path d="M-10,110 C20,90 30,50 110,60" fill="none" stroke="#c0e54b" strokeWidth="8" />
-                  <Path d="M-10,110 C20,90 30,50 110,60" fill="none" stroke="rgba(255, 255, 255, 0.2)" strokeWidth="12" />
-                  <Circle cx="80" cy="30" r="10" fill="none" stroke="#cFFF04" strokeWidth="1" />
-                  <Circle cx="80" cy="30" r="15" fill="none" stroke="#cFFF04" strokeWidth="0.5" />
-                </Svg>
-              </View>
+              <View style={styles.challengeCardInner}>
+                {/* Graphic background lines in SVG */}
+                <View style={StyleSheet.absoluteFillObject} pointerEvents="none">
+                  <Svg height="100%" width="100%" viewBox="0 0 100 100" preserveAspectRatio="none">
+                    <Path d="M-10,110 C20,90 30,50 110,60" fill="none" stroke="#c0e54b" strokeWidth="8" />
+                    <Path d="M-10,110 C20,90 30,50 110,60" fill="none" stroke="rgba(255, 255, 255, 0.2)" strokeWidth="12" />
+                    <Circle cx="80" cy="30" r="10" fill="none" stroke="#cFFF04" strokeWidth="1" />
+                    <Circle cx="80" cy="30" r="15" fill="none" stroke="#cFFF04" strokeWidth="0.5" />
+                  </Svg>
+                </View>
 
-              <View style={styles.challengeContent}>
-                <Text style={styles.challengeTitle}>Today's Challenge</Text>
-                <Text style={styles.challengeText}>Do your plan before 9:00 AM</Text>
-              </View>
+                <View style={styles.challengeContent}>
+                  <Text style={styles.challengeTitle}>{todayDayName}'s Challenge</Text>
+                  <Text style={styles.challengeText}>Do your plan before 9:00 AM</Text>
+                </View>
 
-              {/* Running Silhouette SVG Cutout */}
-              <View style={styles.runnerVectorContainer}>
-                <Svg width="54" height="72" viewBox="0 0 24 24" fill="none">
-                  <G opacity="0.95">
-                    {/* Circle head */}
-                    <Circle cx="13" cy="4" r="2.5" fill="#0A0A0F" />
-                    {/* Running torso & limbs */}
-                    <Path 
-                      d="M10,8 L13,11 L12,15 L9,19 M13,11 L16,8 L19,9 M8,10 L10,8 L12,9 L14,7 M12,15 L15,18 L18,17" 
-                      stroke="#0A0A0F" 
-                      strokeWidth="2.5" 
-                      strokeLinecap="round" 
-                      strokeLinejoin="round" 
-                    />
-                  </G>
-                </Svg>
+                {/* Running Silhouette SVG Cutout */}
+                <View style={styles.runnerVectorContainer}>
+                  <Svg width="54" height="72" viewBox="0 0 24 24" fill="none">
+                    <G opacity="0.95">
+                      {/* Circle head */}
+                      <Circle cx="13" cy="4" r="2.5" fill="#0A0A0F" />
+                      {/* Running torso & limbs */}
+                      <Path
+                        d="M10,8 L13,11 L12,15 L9,19 M13,11 L16,8 L19,9 M8,10 L10,8 L12,9 L14,7 M12,15 L15,18 L18,17"
+                        stroke="#0A0A0F"
+                        strokeWidth="2.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </G>
+                  </Svg>
+                </View>
               </View>
             </TouchableOpacity>
           </Animated.View>
@@ -359,8 +407,8 @@ export default function TodayScreen() {
                 key={tab}
                 style={[
                   styles.filterChip,
-                  activeTab === tab 
-                    ? { backgroundColor: '#FFFFFF', borderColor: '#FFFFFF' } 
+                  activeTab === tab
+                    ? { backgroundColor: '#FFFFFF', borderColor: '#FFFFFF' }
                     : { backgroundColor: 'rgba(255, 255, 255, 0.04)', borderColor: 'rgba(255, 255, 255, 0.1)' }
                 ]}
                 onPress={() => {
@@ -370,7 +418,7 @@ export default function TodayScreen() {
               >
                 <Text style={[
                   styles.filterChipText,
-                  activeTab === tab ? { color: '#0A0A0F', fontWeight: '700' } : { color: '#8E8E93' }
+                  activeTab === tab ? { color: '#0A0A0F' } : { color: '#8E8E93' }
                 ]}>
                   {tab}
                 </Text>
@@ -381,8 +429,8 @@ export default function TodayScreen() {
           {/* Grid Metrics Cards */}
           <View style={styles.gridContainer}>
             {/* Steps Card (Pink/Purple) */}
-            <Animated.View 
-              entering={FadeInDown.delay(250).duration(400)} 
+            <Animated.View
+              entering={FadeInDown.delay(250).duration(400)}
               style={[styles.gridCard, { backgroundColor: '#E6CFFF' }]}
             >
               <View style={styles.gridCardHeader}>
@@ -400,41 +448,40 @@ export default function TodayScreen() {
             </Animated.View>
 
             {/* My Goals Card (Blue/Purple) */}
-            <Animated.View 
-              entering={FadeInDown.delay(300).duration(400)} 
+            <Animated.View
+              entering={FadeInDown.delay(300).duration(400)}
               style={[styles.gridCard, { backgroundColor: '#C4D6FF' }]}
             >
               <View style={styles.gridCardHeader}>
                 <Text style={styles.gridCardTitle}>My Goals</Text>
               </View>
-              
+
               <Text style={styles.goalsCardSubtext}>
                 Keep it up, you can achieve your goals.
               </Text>
-              
+
               <View style={styles.radialContainer}>
                 {/* Custom inline progress arc SVG */}
                 <Svg width="54" height="54" viewBox="0 0 36 36">
                   <Circle cx="18" cy="18" r="14" fill="none" stroke="rgba(10, 10, 15, 0.08)" strokeWidth="3" />
-                  <Circle 
-                    cx="18" 
-                    cy="18" 
-                    r="14" 
-                    fill="none" 
-                    stroke="#0A0A0F" 
-                    strokeWidth="3.5" 
-                    strokeDasharray="88" 
+                  <Circle
+                    cx="18"
+                    cy="18"
+                    r="14"
+                    fill="none"
+                    stroke="#0A0A0F"
+                    strokeWidth="3.5"
+                    strokeDasharray="88"
                     strokeDashoffset={88 - (88 * 42) / 100}
                     strokeLinecap="round"
                     transform="rotate(-90 18 18)"
                   />
-                  <SvgText 
-                    x="18" 
-                    y="21" 
-                    fontSize="7" 
-                    fontFamily={FONTS.digital} 
-                    fontWeight="800" 
-                    fill="#0A0A0F" 
+                  <SvgText
+                    x="18"
+                    y="21"
+                    fontSize="7"
+                    fontFamily={FONTS.digital}
+                    fill="#0A0A0F"
                     textAnchor="middle"
                   >
                     42%
@@ -476,42 +523,42 @@ export default function TodayScreen() {
                 <Svg width="110" height="110" viewBox="0 0 40 40">
                   {/* Base Circle */}
                   <Circle cx="20" cy="20" r="18" fill="none" stroke="rgba(255, 255, 255, 0.04)" strokeWidth="3" />
-                  
+
                   {/* Ring 1 - Remaining (Blue) - Outer */}
-                  <Circle 
-                    cx="20" 
-                    cy="20" 
-                    r="16" 
-                    fill="none" 
-                    stroke="#C4D6FF" 
-                    strokeWidth="2.5" 
-                    strokeDasharray="100.5" 
+                  <Circle
+                    cx="20"
+                    cy="20"
+                    r="16"
+                    fill="none"
+                    stroke="#C4D6FF"
+                    strokeWidth="2.5"
+                    strokeDasharray="100.5"
                     strokeDashoffset={100.5 - (100.5 * 72) / 100} // 72%
                     strokeLinecap="round"
                     transform="rotate(-90 20 20)"
                   />
                   {/* Ring 2 - Burned (Pink) - Middle */}
-                  <Circle 
-                    cx="20" 
-                    cy="20" 
-                    r="12.5" 
-                    fill="none" 
-                    stroke="#E6CFFF" 
-                    strokeWidth="2.5" 
-                    strokeDasharray="78.5" 
+                  <Circle
+                    cx="20"
+                    cy="20"
+                    r="12.5"
+                    fill="none"
+                    stroke="#E6CFFF"
+                    strokeWidth="2.5"
+                    strokeDasharray="78.5"
                     strokeDashoffset={78.5 - (78.5 * 27) / 100} // 27%
                     strokeLinecap="round"
                     transform="rotate(-90 20 20)"
                   />
                   {/* Ring 3 - Target (Lime) - Inner */}
-                  <Circle 
-                    cx="20" 
-                    cy="20" 
-                    r="9" 
-                    fill="none" 
-                    stroke={BRAND_COLORS.NEON_LIME} 
-                    strokeWidth="2.5" 
-                    strokeDasharray="56.5" 
+                  <Circle
+                    cx="20"
+                    cy="20"
+                    r="9"
+                    fill="none"
+                    stroke={BRAND_COLORS.NEON_LIME}
+                    strokeWidth="2.5"
+                    strokeDasharray="56.5"
                     strokeDashoffset={56.5 - (56.5 * 42) / 100} // 42%
                     strokeLinecap="round"
                     transform="rotate(-90 20 20)"
@@ -536,17 +583,23 @@ export default function TodayScreen() {
           {/* Quick list of routines if available */}
           {todaysGroups.length > 0 && (
             <Animated.View entering={FadeInDown.delay(400).duration(400)} style={styles.startWorkoutSection}>
-              <Text style={styles.startWorkoutTitle}>Ready to workout?</Text>
+              <Text style={[styles.startWorkoutTitle, { color: colors.text }]}>Ready to workout?</Text>
               {todaysGroups.map((group) => (
                 <TouchableOpacity
                   key={group.id}
-                  style={styles.quickStartRoutineCard}
+                  style={[
+                    styles.quickStartRoutineCard,
+                    {
+                      backgroundColor: isDark ? 'rgba(255, 255, 255, 0.03)' : 'rgba(0, 0, 0, 0.03)',
+                      borderColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.06)',
+                    }
+                  ]}
                   onPress={() => handleStartWorkout(group.id)}
                   activeOpacity={0.8}
                 >
                   <View style={styles.quickStartLeft}>
-                    <Text style={styles.quickStartRoutineName}>{group.name}</Text>
-                    <Text style={styles.quickStartRoutineDuration}>Estimated: 30 mins</Text>
+                    <Text style={[styles.quickStartRoutineName, { color: colors.text }]}>{group.name}</Text>
+                    <Text style={[styles.quickStartRoutineDuration, { color: colors.textSecondary }]}>Estimated: 30 mins</Text>
                   </View>
                   <LinearGradient
                     colors={[BRAND_COLORS.NEON_LIME, '#cFFF04']}
@@ -573,7 +626,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: 20,
-    paddingTop: Platform.OS === 'ios' ? 60 : 40,
+    paddingTop: Platform.OS === 'ios' ? 72 : 52,
     paddingBottom: 110,
   },
   header: {
@@ -584,8 +637,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 28,
-    fontFamily: 'Syne-Bold',
-    fontWeight: '800',
+    fontFamily: FONTS.display,
   },
   monthSelector: {
     flexDirection: 'row',
@@ -596,16 +648,21 @@ const styles = StyleSheet.create({
     paddingRight: 6,
     borderRadius: 20,
     gap: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.05,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
   },
   monthText: {
     fontSize: 12,
-    fontFamily: 'SpaceGrotesk-Bold',
-    fontWeight: '800',
+    fontFamily: FONTS.bold,
     color: '#0A0A0F',
     letterSpacing: -0.2,
   },
@@ -638,8 +695,7 @@ const styles = StyleSheet.create({
   },
   calendarDayOfWeek: {
     fontSize: 11,
-    fontFamily: 'SpaceGrotesk-Bold',
-    fontWeight: '700',
+    fontFamily: FONTS.bold,
     color: '#646470',
   },
   calendarDateCircle: {
@@ -652,11 +708,25 @@ const styles = StyleSheet.create({
   },
   calendarDateNum: {
     fontSize: 13,
-    fontFamily: 'SpaceGrotesk-Bold',
-    fontWeight: '700',
+    fontFamily: FONTS.bold,
   },
-  challengeCard: {
+  challengeCardShadow: {
     backgroundColor: BRAND_COLORS.NEON_LIME,
+    borderRadius: 24,
+    marginBottom: 20,
+    ...Platform.select({
+      ios: {
+        shadowColor: BRAND_COLORS.NEON_LIME,
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.15,
+        shadowRadius: 12,
+      },
+      android: {
+        elevation: 4,
+      },
+    }),
+  },
+  challengeCardInner: {
     borderRadius: 24,
     padding: 22,
     flexDirection: 'row',
@@ -665,12 +735,7 @@ const styles = StyleSheet.create({
     minHeight: 108,
     position: 'relative',
     overflow: 'hidden',
-    marginBottom: 20,
-    shadowColor: BRAND_COLORS.NEON_LIME,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 6,
+    width: '100%',
   },
   challengeContent: {
     flex: 1,
@@ -678,15 +743,13 @@ const styles = StyleSheet.create({
   },
   challengeTitle: {
     fontSize: 18,
-    fontFamily: 'Syne-Bold',
-    fontWeight: '800',
+    fontFamily: FONTS.display,
     color: '#0A0A0F',
     marginBottom: 4,
   },
   challengeText: {
     fontSize: 12,
-    fontFamily: 'SpaceGrotesk-Medium',
-    fontWeight: '600',
+    fontFamily: FONTS.medium,
     color: 'rgba(10, 10, 15, 0.7)',
   },
   runnerVectorContainer: {
@@ -708,8 +771,7 @@ const styles = StyleSheet.create({
   },
   filterChipText: {
     fontSize: 12,
-    fontFamily: 'SpaceGrotesk-Bold',
-    fontWeight: '600',
+    fontFamily: FONTS.bold,
   },
   gridContainer: {
     flexDirection: 'row',
@@ -722,11 +784,17 @@ const styles = StyleSheet.create({
     padding: 18,
     minHeight: 148,
     justifyContent: 'space-between',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.04,
-    shadowRadius: 8,
-    elevation: 2,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.04,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
   },
   gridCardHeader: {
     flexDirection: 'row',
@@ -735,8 +803,7 @@ const styles = StyleSheet.create({
   },
   gridCardTitle: {
     fontSize: 15,
-    fontFamily: 'Syne-Bold',
-    fontWeight: '800',
+    fontFamily: FONTS.display,
     color: '#0A0A0F',
   },
   stepMetricContainer: {
@@ -744,21 +811,18 @@ const styles = StyleSheet.create({
   },
   stepMetricNum: {
     fontSize: 32,
-    fontFamily: 'Orbitron-Bold',
-    fontWeight: '800',
+    fontFamily: FONTS.digital,
     color: '#0A0A0F',
     letterSpacing: -1,
   },
   stepMetricUnit: {
     fontSize: 12,
-    fontFamily: 'SpaceGrotesk-Bold',
-    fontWeight: '600',
+    fontFamily: FONTS.bold,
     color: 'rgba(10, 10, 15, 0.6)',
   },
   goalsCardSubtext: {
     fontSize: 11,
-    fontFamily: 'SpaceGrotesk-Medium',
-    fontWeight: '500',
+    fontFamily: FONTS.medium,
     color: 'rgba(10, 10, 15, 0.6)',
     lineHeight: 15,
     marginRight: 6,
@@ -776,11 +840,17 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 24,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 4,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000000',
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.1,
+        shadowRadius: 12,
+      },
+      android: {
+        elevation: 3,
+      },
+    }),
   },
   donutTextSide: {
     flex: 1,
@@ -798,14 +868,12 @@ const styles = StyleSheet.create({
   },
   legendText: {
     fontSize: 13,
-    fontFamily: 'SpaceGrotesk-Medium',
+    fontFamily: FONTS.medium,
     color: '#A5A5AF',
-    fontWeight: '600',
   },
   legendMetric: {
     color: '#FFFFFF',
-    fontFamily: 'Orbitron-Bold',
-    fontWeight: '800',
+    fontFamily: FONTS.digital,
   },
   donutChartSide: {
     justifyContent: 'center',
@@ -817,8 +885,7 @@ const styles = StyleSheet.create({
   },
   startWorkoutTitle: {
     fontSize: 18,
-    fontFamily: 'Syne-Bold',
-    fontWeight: '800',
+    fontFamily: FONTS.display,
     color: '#FFFFFF',
   },
   quickStartRoutineCard: {
@@ -836,14 +903,12 @@ const styles = StyleSheet.create({
   },
   quickStartRoutineName: {
     fontSize: 16,
-    fontFamily: 'SpaceGrotesk-Bold',
-    fontWeight: '700',
+    fontFamily: FONTS.bold,
     color: '#FFFFFF',
   },
   quickStartRoutineDuration: {
     fontSize: 12,
-    fontFamily: 'SpaceGrotesk-Medium',
-    fontWeight: '500',
+    fontFamily: FONTS.medium,
     color: '#8E8E93',
   },
   playButtonIcon: {
@@ -853,7 +918,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  
+
   // ============================================
   // Active Timer Screen Styles ("Your Workout")
   // ============================================
@@ -873,8 +938,7 @@ const styles = StyleSheet.create({
   trainerOverlayWord: {
     fontSize: width * 0.16,
     color: 'rgba(255, 255, 255, 0.015)',
-    fontWeight: '900',
-    fontFamily: 'Syne-Bold',
+    fontFamily: FONTS.display,
     letterSpacing: 2,
   },
   workoutHeader: {
@@ -887,14 +951,12 @@ const styles = StyleSheet.create({
   },
   workoutHeaderTitle: {
     fontSize: 22,
-    fontFamily: 'Syne-Bold',
-    fontWeight: '800',
+    fontFamily: FONTS.display,
     color: '#FFFFFF',
   },
   workoutHeaderSubtitle: {
     fontSize: 12,
-    fontFamily: 'SpaceGrotesk-Medium',
-    fontWeight: '600',
+    fontFamily: FONTS.medium,
     color: '#8E8E93',
     marginTop: 2,
   },
@@ -908,15 +970,13 @@ const styles = StyleSheet.create({
   },
   burnedLabel: {
     fontSize: 9,
-    fontFamily: 'SpaceGrotesk-Bold',
+    fontFamily: FONTS.bold,
     color: '#8E8E93',
-    fontWeight: '700',
     textTransform: 'uppercase',
   },
   burnedValue: {
     fontSize: 18,
-    fontFamily: 'Orbitron-Bold',
-    fontWeight: '800',
+    fontFamily: FONTS.digital,
     color: '#FFFFFF',
     marginTop: 2,
   },
@@ -964,8 +1024,7 @@ const styles = StyleSheet.create({
   },
   resetText: {
     fontSize: 13,
-    fontFamily: 'SpaceGrotesk-Bold',
-    fontWeight: '700',
+    fontFamily: FONTS.bold,
   },
   workoutFooterPanel: {
     position: 'absolute',
@@ -1005,14 +1064,12 @@ const styles = StyleSheet.create({
   },
   timeStatsLabel: {
     fontSize: 10,
-    fontFamily: 'SpaceGrotesk-Medium',
-    fontWeight: '600',
+    fontFamily: FONTS.medium,
     color: '#8E8E93',
   },
   timeStatsValue: {
     fontSize: 14,
-    fontFamily: 'Orbitron-Bold',
-    fontWeight: '800',
+    fontFamily: FONTS.digital,
     color: '#0A0A0F',
   },
   digitalTimerContainer: {
@@ -1021,8 +1078,7 @@ const styles = StyleSheet.create({
   },
   digitalTimer: {
     fontSize: 34,
-    fontFamily: 'Orbitron-Bold',
-    fontWeight: '800',
+    fontFamily: FONTS.digital,
     color: '#0A0A0F',
     letterSpacing: -1,
   },

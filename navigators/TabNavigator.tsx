@@ -275,7 +275,6 @@ const styles = StyleSheet.create({
   streakBadgeText: {
     color: '#FFFFFF',
     fontSize: 9,
-    fontFamily: 'SpaceGrotesk',
-    fontWeight: '800',
+    fontFamily: 'SpaceGrotesk-Bold',
   },
 });

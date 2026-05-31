@@ -1,7 +1,38 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { STORAGE_KEYS } from '@/constants';
-import { Exercise, WorkoutGroup, DailyRecord, StreakMeta, TodayCompletion, ThemeMode } from '@/types/data';
+import { STORAGE_KEYS, GROUP_COLORS } from '@/constants';
+import { Exercise, WorkoutGroup, DailyRecord, StreakMeta, TodayCompletion, ThemeMode, DayOfWeek } from '@/types/data';
 import { getDefaultExercises } from '@/data/defaultExercises';
+
+export const getDefaultGroups = (): WorkoutGroup[] => {
+  const dayDetails: { label: DayOfWeek; name: string }[] = [
+    { label: 'Mon', name: 'Monday Workout' },
+    { label: 'Tue', name: 'Tuesday Workout' },
+    { label: 'Wed', name: 'Wednesday Workout' },
+    { label: 'Thu', name: 'Thursday Workout' },
+    { label: 'Fri', name: 'Friday Workout' },
+    { label: 'Sat', name: 'Saturday Workout' },
+    { label: 'Sun', name: 'Sunday Workout' },
+  ];
+
+  const defaultGroups = dayDetails.map((day, idx) => ({
+    id: `day-group-${day.label.toLowerCase()}`,
+    name: day.name,
+    exerciseIds: [],
+    days: [day.label],
+    color: GROUP_COLORS[idx % GROUP_COLORS.length],
+  }));
+
+  // Add the "All Days Workout" group active on all days
+  defaultGroups.push({
+    id: 'day-group-all',
+    name: 'All Days Workout',
+    exerciseIds: [],
+    days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+    color: GROUP_COLORS[7 % GROUP_COLORS.length],
+  });
+
+  return defaultGroups;
+};
 
 export const storage = {
   // Exercises
@@ -28,7 +59,12 @@ export const storage = {
   async getGroups(): Promise<WorkoutGroup[]> {
     try {
       const data = await AsyncStorage.getItem(STORAGE_KEYS.GROUPS);
-      return data ? JSON.parse(data) : [];
+      if (!data) {
+        const defaultGroups = getDefaultGroups();
+        await this.setGroups(defaultGroups);
+        return defaultGroups;
+      }
+      return JSON.parse(data);
     } catch (error) {
       console.error('Error getting groups:', error);
       return [];

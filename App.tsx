@@ -18,8 +18,6 @@ export default function App() {
     'Syne-Regular': require('./assets/fonts/Syne-Regular.ttf'),
     'Syne-Bold': require('./assets/fonts/Syne-Bold.ttf'),
     'Syne-ExtraBold': require('./assets/fonts/Syne-ExtraBold.ttf'),
-    'Orbitron-Regular': require('./assets/fonts/Orbitron-Regular.ttf'),
-    'Orbitron-Medium': require('./assets/fonts/Orbitron-Medium.ttf'),
     'Orbitron-Bold': require('./assets/fonts/Orbitron-Bold.ttf'),
   });
 

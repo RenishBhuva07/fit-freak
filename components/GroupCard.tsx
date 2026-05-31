@@ -4,7 +4,7 @@ import { WorkoutGroup, Exercise } from '@/types/data';
 import { useTheme } from '@/hooks/useTheme';
 import { useState } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
-import { MUSCLE_GROUP_COLORS } from '@/constants';
+import { MUSCLE_GROUP_COLORS, FONTS, BRAND_COLORS } from '@/constants';
 
 interface GroupCardProps {
   group: WorkoutGroup;
@@ -38,11 +38,12 @@ export function GroupCard({
           styles.container,
           {
             backgroundColor: Platform.OS === 'android'
-              ? (isDark ? '#141428' : '#ffffff')
+              ? (isDark ? BRAND_COLORS.CHARCOAL_CARD : '#ffffff')
               : (isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(255, 255, 255, 0.6)'),
             borderColor: isDark
               ? 'rgba(255, 255, 255, 0.08)'
               : 'rgba(255, 255, 255, 0.5)',
+            elevation: Platform.OS === 'android' ? 2 : 0,
           },
         ]}
       >
@@ -172,7 +173,6 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.08,
-    elevation: 3,
   },
   content: {
     padding: 16,
@@ -198,7 +198,7 @@ const styles = StyleSheet.create({
   },
   name: {
     fontSize: 18,
-    fontWeight: '700',
+    fontFamily: FONTS.display,
     marginBottom: 6,
   },
   metaRow: {
@@ -213,7 +213,7 @@ const styles = StyleSheet.create({
   },
   metaText: {
     fontSize: 13,
-    fontWeight: '600',
+    fontFamily: FONTS.medium,
   },
   rightContent: {
     alignItems: 'flex-end',
@@ -233,7 +233,7 @@ const styles = StyleSheet.create({
   },
   dayText: {
     fontSize: 10,
-    fontWeight: '700',
+    fontFamily: FONTS.bold,
   },
   exerciseList: {
     marginTop: 16,
@@ -258,12 +258,12 @@ const styles = StyleSheet.create({
   exerciseNumber: {
     color: '#FFFFFF',
     fontSize: 12,
-    fontWeight: '700',
+    fontFamily: FONTS.bold,
   },
   exerciseName: {
     flex: 1,
     fontSize: 14,
-    fontWeight: '600',
+    fontFamily: FONTS.medium,
   },
   exerciseSetsBadge: {
     paddingHorizontal: 10,
@@ -272,6 +272,6 @@ const styles = StyleSheet.create({
   },
   exerciseSets: {
     fontSize: 12,
-    fontWeight: '700',
+    fontFamily: FONTS.bold,
   },
 });

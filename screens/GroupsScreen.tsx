@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Alert,
   TextInput,
+  Platform,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { Trash2, Edit2, Plus } from 'lucide-react-native';
@@ -14,7 +15,7 @@ import { useTheme } from '@/hooks/useTheme';
 import { useExercises } from '@/hooks/useExercises';
 import { useGroups } from '@/hooks/useGroups';
 import { DayOfWeek, Exercise } from '@/types/data';
-import { DAYS_OF_WEEK, MUSCLE_GROUPS, GROUP_COLORS } from '@/constants';
+import { DAYS_OF_WEEK, MUSCLE_GROUPS, GROUP_COLORS, FONTS } from '@/constants';
 import { GroupCard } from '@/components/GroupCard';
 import { FloatingActionButton } from '@/components/FloatingActionButton';
 import { ThemeToggle } from '@/components/ThemeToggle';
@@ -296,8 +297,8 @@ export default function GroupsScreen() {
                         backgroundColor: selectedDays.includes(day)
                           ? color
                           : isDark
-                          ? 'rgba(255, 255, 255, 0.08)'
-                          : 'rgba(0, 0, 0, 0.03)',
+                            ? 'rgba(255, 255, 255, 0.08)'
+                            : 'rgba(0, 0, 0, 0.03)',
                         borderColor: color,
                       },
                     ]}
@@ -371,8 +372,8 @@ export default function GroupsScreen() {
                                 backgroundColor: selectedExerciseIds.includes(ex.id)
                                   ? colors.accent
                                   : isDark
-                                  ? 'rgba(255, 255, 255, 0.08)'
-                                  : 'rgba(0, 0, 0, 0.03)',
+                                    ? 'rgba(255, 255, 255, 0.08)'
+                                    : 'rgba(0, 0, 0, 0.03)',
                                 borderColor: isDark
                                   ? 'rgba(255, 255, 255, 0.1)'
                                   : 'rgba(0, 0, 0, 0.06)',
@@ -480,8 +481,8 @@ export default function GroupsScreen() {
                         backgroundColor: selectedDays.includes(day)
                           ? color
                           : isDark
-                          ? 'rgba(255, 255, 255, 0.08)'
-                          : 'rgba(0, 0, 0, 0.03)',
+                            ? 'rgba(255, 255, 255, 0.08)'
+                            : 'rgba(0, 0, 0, 0.03)',
                         borderColor: color,
                       },
                     ]}
@@ -553,8 +554,8 @@ export default function GroupsScreen() {
                                 backgroundColor: selectedExerciseIds.includes(ex.id)
                                   ? colors.accent
                                   : isDark
-                                  ? 'rgba(255, 255, 255, 0.08)'
-                                  : 'rgba(0, 0, 0, 0.03)',
+                                    ? 'rgba(255, 255, 255, 0.08)'
+                                    : 'rgba(0, 0, 0, 0.03)',
                                 borderColor: isDark
                                   ? 'rgba(255, 255, 255, 0.1)'
                                   : 'rgba(0, 0, 0, 0.06)',
@@ -614,11 +615,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 20,
-    paddingTop: 60,
+    paddingTop: Platform.OS === 'ios' ? 72 : 52,
     paddingBottom: 16,
   },
   title: {
     fontSize: 34,
+    fontFamily: FONTS.display,
     fontWeight: '800',
     letterSpacing: -0.5,
   },
@@ -630,15 +632,18 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     fontSize: 26,
+    fontFamily: FONTS.display,
     fontWeight: '700',
     marginBottom: 8,
   },
   emptyText: {
     fontSize: 16,
+    fontFamily: FONTS.medium,
     textAlign: 'center',
   },
   loadingText: {
     fontSize: 16,
+    fontFamily: FONTS.medium,
   },
   list: {
     flex: 1,
@@ -671,6 +676,7 @@ const styles = StyleSheet.create({
   },
   sheetTitle: {
     fontSize: 26,
+    fontFamily: FONTS.display,
     fontWeight: '800',
     marginBottom: 24,
     letterSpacing: -0.5,
@@ -680,11 +686,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18,
     borderRadius: 16,
     fontSize: 15,
+    fontFamily: FONTS.medium,
     fontWeight: '500',
     marginBottom: 16,
   },
   label: {
     fontSize: 14,
+    fontFamily: FONTS.bold,
     fontWeight: '600',
     marginBottom: 12,
     marginTop: 8,
@@ -714,6 +722,7 @@ const styles = StyleSheet.create({
   },
   dayChipText: {
     fontSize: 14,
+    fontFamily: FONTS.bold,
     fontWeight: '700',
   },
   exercisePickerToggle: {
@@ -726,11 +735,13 @@ const styles = StyleSheet.create({
   },
   exercisePickerText: {
     fontSize: 15,
+    fontFamily: FONTS.medium,
     flex: 1,
     fontWeight: '500',
   },
   tapText: {
     fontSize: 13,
+    fontFamily: FONTS.bold,
     fontWeight: '700',
   },
   exercisePicker: {
@@ -744,6 +755,7 @@ const styles = StyleSheet.create({
   },
   muscleGroupName: {
     fontSize: 14,
+    fontFamily: FONTS.bold,
     fontWeight: '700',
     marginBottom: 10,
     letterSpacing: 0.3,
@@ -757,6 +769,7 @@ const styles = StyleSheet.create({
   },
   exerciseChipText: {
     fontSize: 13,
+    fontFamily: FONTS.bold,
     fontWeight: '600',
   },
   submitButtonContainer: {
@@ -772,6 +785,7 @@ const styles = StyleSheet.create({
   submitButtonText: {
     color: '#FFFFFF',
     fontSize: 16,
+    fontFamily: FONTS.bold,
     fontWeight: '700',
     letterSpacing: 0.3,
   },
