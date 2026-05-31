@@ -33,3 +33,16 @@ yarn-error.*
 
 # typescript
 *.tsbuildinfo
+
+# Android
+android/.gradle/
+android/app/build/
+android/local.properties
+android/.kotlin/
+android/**/*.log
+*.log
+
+# iOS
+ios/build/
+ios/Pods/
+ios/.xcode.env.local

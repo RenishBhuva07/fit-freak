@@ -65,6 +65,23 @@ export const GRADIENTS = {
   },
 };
 
+export const BRAND_COLORS = {
+  NEON_LIME: '#D6FD53',
+  SOFT_LAVENDER: '#E2D2FF',
+  POWDER_BLUE: '#C4D6FF',
+  RICH_BLACK: '#0B0B0B',
+  CHARCOAL_CARD: '#161618',
+};
+
+export const FONTS = {
+  regular: 'SpaceGrotesk-Regular',
+  medium: 'SpaceGrotesk-Medium',
+  bold: 'SpaceGrotesk-Bold',
+  display: 'Syne-Bold',
+  displayExtra: 'Syne-ExtraBold',
+  digital: 'Orbitron-Bold',
+};
+
 export const LIGHT_THEME: ThemeColors = {
   background: '#ffffff',
   backgroundSecondary: '#f8fafc',
@@ -72,8 +89,8 @@ export const LIGHT_THEME: ThemeColors = {
   text: '#0f172a',
   textSecondary: '#64748b',
   textTertiary: '#94a3b8',
-  accent: '#667eea',
-  accentLight: '#eef2ff',
+  accent: '#764ba2', // A beautiful deep purple for light theme
+  accentLight: '#f5f3ff',
   success: '#10b981',
   error: '#ef4444',
   warning: '#f59e0b',
@@ -83,19 +100,19 @@ export const LIGHT_THEME: ThemeColors = {
 };
 
 export const DARK_THEME: ThemeColors = {
-  background: '#0a0a0f',
-  backgroundSecondary: '#141428',
-  backgroundTertiary: '#1a1a3e',
+  background: BRAND_COLORS.RICH_BLACK,
+  backgroundSecondary: '#121214',
+  backgroundTertiary: BRAND_COLORS.CHARCOAL_CARD,
   text: '#ffffff',
-  textSecondary: '#a0a0b0',
-  textTertiary: '#606070',
-  accent: '#667eea',
-  accentLight: '#1e1e4e',
-  success: '#38ef7d',
-  error: '#ff6b6b',
+  textSecondary: '#A5A5AF',
+  textTertiary: '#646470',
+  accent: BRAND_COLORS.NEON_LIME,
+  accentLight: 'rgba(214, 253, 83, 0.12)',
+  success: BRAND_COLORS.NEON_LIME,
+  error: '#FF6B6B',
   warning: '#fbbf24',
-  card: 'rgba(255, 255, 255, 0.05)',
-  border: 'rgba(255, 255, 255, 0.08)',
+  card: BRAND_COLORS.CHARCOAL_CARD,
+  border: 'rgba(255, 255, 255, 0.06)',
   streak: '#FF6B6B',
 };
 

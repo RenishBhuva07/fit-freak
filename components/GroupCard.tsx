@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native';
 import { Grid, Clock, ChevronDown, ChevronUp, Dumbbell } from 'lucide-react-native';
 import { WorkoutGroup, Exercise } from '@/types/data';
 import { useTheme } from '@/hooks/useTheme';
@@ -37,9 +37,9 @@ export function GroupCard({
         style={[
           styles.container,
           {
-            backgroundColor: isDark
-              ? 'rgba(255, 255, 255, 0.05)'
-              : 'rgba(255, 255, 255, 0.6)',
+            backgroundColor: Platform.OS === 'android'
+              ? (isDark ? '#141428' : '#ffffff')
+              : (isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(255, 255, 255, 0.6)'),
             borderColor: isDark
               ? 'rgba(255, 255, 255, 0.08)'
               : 'rgba(255, 255, 255, 0.5)',
@@ -172,8 +172,7 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.08,
-    elevation: 5,
-    overflow: 'hidden',
+    elevation: 3,
   },
   content: {
     padding: 16,

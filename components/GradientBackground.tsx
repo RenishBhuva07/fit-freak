@@ -1,4 +1,4 @@
-import { View, StyleSheet, Platform, BlurView as ExpoBlurView } from 'react-native';
+import { View, StyleSheet, Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '@/hooks/useTheme';
 import { ReactNode } from 'react';
@@ -11,8 +11,8 @@ export function GradientBackground({ children }: GradientBackgroundProps) {
   const { isDark } = useTheme();
 
   const colors = isDark
-    ? ['#0a0a0f', '#141428', '#1a1a3e', '#0f0f1e']
-    : ['#ffffff', '#f8fafc', '#eef2f7', '#e8eeef'];
+    ? (['#0a0a0f', '#141428', '#1a1a3e', '#0f0f1e'] as const)
+    : (['#ffffff', '#f8fafc', '#eef2f7', '#e8eeef'] as const);
 
   return (
     <LinearGradient

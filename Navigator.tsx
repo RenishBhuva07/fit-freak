@@ -1,0 +1,61 @@
+import React from 'react';
+import { NavigationContainer } from '@react-navigation/native';
+import {
+  createNativeStackNavigator,
+  NativeStackNavigationOptions,
+} from '@react-navigation/native-stack';
+
+import { navigationRef } from '@/utils/NavigationService';
+import TabNavigator from '@/navigators/TabNavigator';
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Route param list — extend this as you add modal / auth screens
+// ─────────────────────────────────────────────────────────────────────────────
+export type RootStackParamList = {
+  /** Bottom tabs (Exercises, Groups, Today, Stats) */
+  MainTabs: undefined;
+  // Add modal screens here, e.g.:
+  // ExerciseDetail: { exerciseId: string };
+  // Auth: undefined;
+};
+
+const Stack = createNativeStackNavigator<RootStackParamList>();
+
+// Shared options applied to every stack screen
+const defaultScreenOptions: NativeStackNavigationOptions = {
+  headerShown: false,
+  animation: 'slide_from_right',
+  contentStyle: { backgroundColor: 'transparent' },
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Navigator
+//
+// Usage — rendered inside App.tsx, which wraps it with NavigationContainer.
+// Call navigate / goBack / replace / resetNavigation from anywhere via
+// NavigationService without needing to thread the navigation prop.
+// ─────────────────────────────────────────────────────────────────────────────
+export default function Navigator() {
+  return (
+    <NavigationContainer ref={navigationRef}>
+      <Stack.Navigator
+        initialRouteName="MainTabs"
+        screenOptions={defaultScreenOptions}
+      >
+        {/* Main tab bar */}
+        <Stack.Screen name="MainTabs" component={TabNavigator} />
+
+        {/*
+         * ── Add modal / stack screens below ──────────────────────────────────
+         *
+         * import ExerciseDetailScreen from '@/screens/ExerciseDetailScreen';
+         * <Stack.Screen
+         *   name="ExerciseDetail"
+         *   component={ExerciseDetailScreen}
+         *   options={{ animation: 'slide_from_bottom' }}
+         * />
+         */}
+      </Stack.Navigator>
+    </NavigationContainer>
+  );
+}

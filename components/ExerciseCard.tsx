@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native';
 import { Dumbbell, Check, Clock } from 'lucide-react-native';
 import { Exercise } from '@/types/data';
 import { MUSCLE_GROUP_COLORS } from '@/constants';
@@ -14,6 +14,8 @@ interface ExerciseCardProps {
   isComplete?: boolean;
   showCompleteButton?: boolean;
   highlighted?: boolean;
+  showBadge?: boolean;
+  reserveActionSpace?: boolean;
 }
 
 export function ExerciseCard({
@@ -23,6 +25,8 @@ export function ExerciseCard({
   isComplete = false,
   showCompleteButton = false,
   highlighted = false,
+  showBadge = true,
+  reserveActionSpace = false,
 }: ExerciseCardProps) {
   const { colors, isDark } = useTheme();
   const muscleColor = MUSCLE_GROUP_COLORS[exercise.muscleGroup];
@@ -52,9 +56,9 @@ export function ExerciseCard({
           style={[
             styles.container,
             {
-              backgroundColor: isDark
-                ? 'rgba(255, 255, 255, 0.05)'
-                : 'rgba(255, 255, 255, 0.6)',
+              backgroundColor: Platform.OS === 'android'
+                ? (isDark ? '#141428' : '#ffffff')
+                : (isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(255, 255, 255, 0.6)'),
               borderColor: highlighted
                 ? colors.accent
                 : isDark
@@ -75,7 +79,12 @@ export function ExerciseCard({
                   <Dumbbell size={16} color="#FFFFFF" strokeWidth={2} />
                 </LinearGradient>
               </View>
-              <View style={styles.titleContainer}>
+              <View
+                style={[
+                  styles.titleContainer,
+                  reserveActionSpace && { marginRight: 80 }
+                ]}
+              >
                 <Text
                   style={[styles.name, { color: colors.text }]}
                   numberOfLines={1}
@@ -96,20 +105,22 @@ export function ExerciseCard({
                   )}
                 </View>
               </View>
-              <View
-                style={[
-                  styles.badge,
-                  {
-                    backgroundColor: isDark
-                      ? `${muscleColor}20`
-                      : `${muscleColor}15`,
-                  },
-                ]}
-              >
-                <Text style={[styles.badgeText, { color: muscleColor }]} numberOfLines={1}>
-                  {exercise.muscleGroup}
-                </Text>
-              </View>
+              {showBadge && (
+                <View
+                  style={[
+                    styles.badge,
+                    {
+                      backgroundColor: isDark
+                        ? `${muscleColor}20`
+                        : `${muscleColor}15`,
+                    },
+                  ]}
+                >
+                  <Text style={[styles.badgeText, { color: muscleColor }]} numberOfLines={1}>
+                    {exercise.muscleGroup}
+                  </Text>
+                </View>
+              )}
             </View>
 
             {exercise.notes && (
@@ -158,8 +169,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     shadowRadius: 12,
     shadowOffset: { width: 0, height: 4 },
-    elevation: 5,
-    overflow: 'hidden',
+    elevation: 3,
   },
   content: {
     padding: 16,

@@ -169,7 +169,12 @@ export default function ExercisesScreen() {
   const renderExercise = ({ item, index }: { item: Exercise; index: number }) => (
     <Animated.View entering={FadeInDown.delay(index * 50).duration(400)}>
       <View style={styles.exerciseRow}>
-        <ExerciseCard exercise={item} onPress={() => handleEdit(item)} />
+        <ExerciseCard
+          exercise={item}
+          onPress={() => handleEdit(item)}
+          showBadge={false}
+          reserveActionSpace={true}
+        />
         <View style={styles.exerciseActions}>
           <TouchableOpacity
             style={[
@@ -677,9 +682,9 @@ const styles = StyleSheet.create({
     paddingBottom: 16,
   },
   title: {
-    fontSize: 34,
+    fontSize: 28,
+    fontFamily: 'Syne',
     fontWeight: '800',
-    letterSpacing: -0.5,
   },
   searchContainer: {
     flexDirection: 'row',
@@ -695,6 +700,7 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     fontSize: 15,
+    fontFamily: 'SpaceGrotesk',
     fontWeight: '500',
   },
   filterButton: {
@@ -717,6 +723,7 @@ const styles = StyleSheet.create({
   },
   filterChipText: {
     fontSize: 13,
+    fontFamily: 'SpaceGrotesk',
     fontWeight: '700',
   },
   sectionHeader: {
@@ -730,7 +737,8 @@ const styles = StyleSheet.create({
   },
   sectionHeaderText: {
     fontSize: 16,
-    fontWeight: '700',
+    fontFamily: 'Syne',
+    fontWeight: '800',
     letterSpacing: 0.3,
   },
   sectionCount: {
@@ -740,7 +748,8 @@ const styles = StyleSheet.create({
   },
   sectionCountText: {
     fontSize: 12,
-    fontWeight: '600',
+    fontFamily: 'Orbitron',
+    fontWeight: '700',
   },
   listContent: {
     paddingBottom: 120,
@@ -768,16 +777,17 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   sheetTitle: {
-    fontSize: 26,
+    fontSize: 24,
+    fontFamily: 'Syne',
     fontWeight: '800',
     marginBottom: 24,
-    letterSpacing: -0.5,
   },
   input: {
     paddingVertical: 16,
     paddingHorizontal: 18,
     borderRadius: 16,
     fontSize: 15,
+    fontFamily: 'SpaceGrotesk',
     fontWeight: '500',
     marginBottom: 12,
     borderWidth: 1,
@@ -792,30 +802,32 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     borderRadius: 14,
     fontSize: 15,
-    fontWeight: '600',
+    fontFamily: 'Orbitron',
+    fontWeight: '700',
     textAlign: 'center',
   },
   label: {
     fontSize: 13,
+    fontFamily: 'SpaceGrotesk',
     fontWeight: '600',
-    marginBottom: 8,
-    marginTop: 8,
+    marginBottom: 10,
     letterSpacing: 0.3,
   },
   chipScroll: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginBottom: 16,
     gap: 8,
+    marginBottom: 16,
   },
   chip: {
-    paddingHorizontal: 18,
-    paddingVertical: 12,
-    borderRadius: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 12,
     borderWidth: 1,
   },
   chipText: {
-    fontSize: 14,
+    fontSize: 13,
+    fontFamily: 'SpaceGrotesk',
     fontWeight: '600',
   },
   row: {
@@ -829,7 +841,7 @@ const styles = StyleSheet.create({
   submitButtonContainer: {
     borderRadius: 16,
     overflow: 'hidden',
-    marginTop: 20,
+    marginTop: 8,
   },
   submitButton: {
     paddingVertical: 18,
@@ -839,6 +851,7 @@ const styles = StyleSheet.create({
   submitButtonText: {
     color: '#FFFFFF',
     fontSize: 16,
+    fontFamily: 'SpaceGrotesk',
     fontWeight: '700',
     letterSpacing: 0.3,
   },

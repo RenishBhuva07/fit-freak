@@ -9,7 +9,7 @@ import {
   TextInput,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { Trash2, Edit2, GripVertical, Plus } from 'lucide-react-native';
+import { Trash2, Edit2, Plus } from 'lucide-react-native';
 import { useTheme } from '@/hooks/useTheme';
 import { useExercises } from '@/hooks/useExercises';
 import { useGroups } from '@/hooks/useGroups';

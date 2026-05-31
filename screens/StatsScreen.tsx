@@ -415,16 +415,16 @@ const styles = StyleSheet.create({
     paddingBottom: 16,
   },
   title: {
-    fontSize: 34,
+    fontSize: 28,
+    fontFamily: 'Syne',
     fontWeight: '800',
-    letterSpacing: -0.5,
   },
   scrollView: {
     flex: 1,
   },
   scrollContent: {
     padding: 20,
-    paddingBottom: 100,
+    paddingBottom: 110,
   },
   streakSection: {
     alignItems: 'center',
@@ -440,12 +440,14 @@ const styles = StyleSheet.create({
   },
   streakNumber: {
     fontSize: 68,
+    fontFamily: 'Orbitron',
     fontWeight: '800',
     color: '#FFFFFF',
     letterSpacing: -2,
   },
   streakLabel: {
     fontSize: 20,
+    fontFamily: 'SpaceGrotesk',
     fontWeight: '600',
     color: '#FFFFFF',
     marginBottom: 14,
@@ -462,6 +464,7 @@ const styles = StyleSheet.create({
   },
   bestStreakText: {
     fontSize: 14,
+    fontFamily: 'SpaceGrotesk',
     fontWeight: '600',
     color: '#FFFFFF',
   },
@@ -469,7 +472,8 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   sectionTitle: {
-    fontSize: 22,
+    fontSize: 20,
+    fontFamily: 'Syne',
     fontWeight: '800',
     marginBottom: 14,
     letterSpacing: -0.3,
@@ -489,6 +493,7 @@ const styles = StyleSheet.create({
   },
   dayLabel: {
     fontSize: 12,
+    fontFamily: 'SpaceGrotesk',
     fontWeight: '700',
     marginBottom: 10,
     letterSpacing: 0.3,
@@ -531,12 +536,14 @@ const styles = StyleSheet.create({
   },
   summaryNumber: {
     fontSize: 32,
+    fontFamily: 'Orbitron',
     fontWeight: '800',
     marginBottom: 6,
     letterSpacing: -1,
   },
   summaryLabel: {
     fontSize: 12,
+    fontFamily: 'SpaceGrotesk',
     fontWeight: '600',
     textAlign: 'center',
     letterSpacing: 0.2,
@@ -551,6 +558,7 @@ const styles = StyleSheet.create({
   },
   emptyHistoryText: {
     fontSize: 15,
+    fontFamily: 'SpaceGrotesk',
     textAlign: 'center',
     fontWeight: '500',
   },
@@ -566,13 +574,14 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   historyDate: {
-    fontSize: 17,
-    fontWeight: '700',
+    fontSize: 16,
+    fontFamily: 'Syne',
+    fontWeight: '800',
     marginBottom: 4,
-    letterSpacing: -0.2,
   },
   historyGroup: {
     fontSize: 14,
+    fontFamily: 'SpaceGrotesk',
     fontWeight: '500',
   },
   historyRight: {
@@ -580,6 +589,7 @@ const styles = StyleSheet.create({
   },
   historyProgress: {
     fontSize: 15,
+    fontFamily: 'Orbitron',
     fontWeight: '700',
     marginBottom: 8,
     letterSpacing: 0.2,
@@ -591,6 +601,7 @@ const styles = StyleSheet.create({
   },
   statusBadgeText: {
     fontSize: 12,
+    fontFamily: 'SpaceGrotesk',
     fontWeight: '700',
     letterSpacing: 0.2,
   },
