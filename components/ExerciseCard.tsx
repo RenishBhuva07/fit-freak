@@ -4,7 +4,7 @@ import { Exercise } from '@/types/data';
 import { MUSCLE_GROUP_COLORS } from '@/constants';
 import { useTheme } from '@/hooks/useTheme';
 import { LinearGradient } from 'expo-linear-gradient';
-import Animated, { FadeIn, ZoomIn, useAnimatedStyle, withSpring, useSharedValue, interpolateColor } from 'react-native-reanimated';
+import Animated, { FadeIn, ZoomIn, useAnimatedStyle, withSpring, useSharedValue } from 'react-native-reanimated';
 import { useEffect } from 'react';
 
 interface ExerciseCardProps {
