@@ -10,17 +10,19 @@ import {
   Platform,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { Trash2, Edit2, Plus } from 'lucide-react-native';
+import { Trash2, Edit2, Plus, Clock, Dumbbell, Play } from 'lucide-react-native';
 import { useTheme } from '@/hooks/useTheme';
 import { useExercises } from '@/hooks/useExercises';
 import { useGroups } from '@/hooks/useGroups';
-import { DayOfWeek, Exercise } from '@/types/data';
-import { DAYS_OF_WEEK, MUSCLE_GROUPS, GROUP_COLORS, FONTS } from '@/constants';
+import { useToday } from '@/hooks/useToday';
+import { useNavigation } from '@react-navigation/native';
+import { DayOfWeek, Exercise, WorkoutGroup } from '@/types/data';
+import { DAYS_OF_WEEK, MUSCLE_GROUPS, GROUP_COLORS, BRAND_COLORS, FONTS } from '@/constants';
 import { GroupCard } from '@/components/GroupCard';
 import { FloatingActionButton } from '@/components/FloatingActionButton';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { GradientBackground } from '@/components/GradientBackground';
-import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
+import { BottomSheetModal, BottomSheetView, BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import { useRef } from 'react';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -39,8 +41,13 @@ export default function GroupsScreen() {
     getGroupEstimatedDuration,
   } = useGroups(exercises);
 
+  const navigation = useNavigation<any>();
+  const { startWorkout } = useToday(exercises, groups);
+
   const addSheetRef = useRef<BottomSheetModal>(null);
   const editSheetRef = useRef<BottomSheetModal>(null);
+  const detailsSheetRef = useRef<BottomSheetModal>(null);
+  
   const editGroupId = useRef<string | null>(null);
 
   const [name, setName] = useState('');
@@ -48,6 +55,7 @@ export default function GroupsScreen() {
   const [selectedExerciseIds, setSelectedExerciseIds] = useState<string[]>([]);
   const [color, setColor] = useState(GROUP_COLORS[0]);
   const [showExercisePicker, setShowExercisePicker] = useState(false);
+  const [selectedGroup, setSelectedGroup] = useState<WorkoutGroup | null>(null);
 
   const loading = exercisesLoading || groupsLoading;
 
@@ -150,6 +158,10 @@ export default function GroupsScreen() {
     return `${names.slice(0, 3).join(', ')} +${names.length - 3} more`;
   };
 
+  const handleGroupPress = (group: WorkoutGroup) => {
+    navigation.navigate('GroupDetail', { groupId: group.id });
+  };
+
   return (
     <GradientBackground>
       <View style={styles.container}>
@@ -181,51 +193,25 @@ export default function GroupsScreen() {
             contentContainerStyle={styles.listContent}
             showsVerticalScrollIndicator={false}
           >
-            {groups.map((group, index) => {
-              const groupExercises = getGroupExercises(group.id);
-              const duration = getGroupEstimatedDuration(group.id);
-              return (
-                <Animated.View
-                  key={group.id}
-                  entering={FadeInDown.delay(index * 100).duration(400)}
-                  style={styles.groupRow}
-                >
-                  <View style={{ flex: 1 }}>
+            <View style={styles.gridContainer}>
+              {groups.map((group, index) => {
+                const groupExercises = getGroupExercises(group.id);
+                const duration = getGroupEstimatedDuration(group.id);
+                return (
+                  <Animated.View
+                    key={group.id}
+                    entering={FadeInDown.delay(index * 40).duration(400)}
+                  >
                     <GroupCard
                       group={group}
                       exercises={groupExercises}
                       estimatedDuration={duration}
+                      onPress={() => handleGroupPress(group)}
                     />
-                  </View>
-                  <View style={styles.groupActions}>
-                    <TouchableOpacity
-                      style={[
-                        styles.actionButton,
-                        {
-                          backgroundColor: isDark
-                            ? 'rgba(255, 255, 255, 0.08)'
-                            : 'rgba(0, 0, 0, 0.05)',
-                        },
-                      ]}
-                      onPress={() => handleEdit(group.id)}
-                      activeOpacity={0.7}
-                    >
-                      <Edit2 size={16} color={colors.textSecondary} strokeWidth={2} />
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={[
-                        styles.actionButton,
-                        { backgroundColor: `${colors.error}15` },
-                      ]}
-                      onPress={() => handleDelete(group)}
-                      activeOpacity={0.7}
-                    >
-                      <Trash2 size={16} color={colors.error} strokeWidth={2} />
-                    </TouchableOpacity>
-                  </View>
-                </Animated.View>
-              );
-            })}
+                  </Animated.View>
+                );
+              })}
+            </View>
           </ScrollView>
         )}
 
@@ -242,11 +228,13 @@ export default function GroupsScreen() {
             backgroundColor: isDark ? 'rgba(255, 255, 255, 0.3)' : 'rgba(0, 0, 0, 0.2)',
           }}
         >
-          <BottomSheetView style={styles.sheetContent}>
-            <ScrollView showsVerticalScrollIndicator={false}>
-              <Text style={[styles.sheetTitle, { color: colors.text }]}>
-                Create Group
-              </Text>
+          <BottomSheetScrollView
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.sheetContent}
+          >
+            <Text style={[styles.sheetTitle, { color: colors.text }]}>
+              Create Group
+            </Text>
 
               <TextInput
                 style={[
@@ -416,8 +404,7 @@ export default function GroupsScreen() {
                   <Text style={styles.submitButtonText}>Create Group</Text>
                 </LinearGradient>
               </TouchableOpacity>
-            </ScrollView>
-          </BottomSheetView>
+          </BottomSheetScrollView>
         </BottomSheetModal>
 
         {/* Edit Group Bottom Sheet */}
@@ -431,9 +418,11 @@ export default function GroupsScreen() {
             backgroundColor: isDark ? 'rgba(255, 255, 255, 0.3)' : 'rgba(0, 0, 0, 0.2)',
           }}
         >
-          <BottomSheetView style={styles.sheetContent}>
-            <ScrollView showsVerticalScrollIndicator={false}>
-              <Text style={[styles.sheetTitle, { color: colors.text }]}>Edit Group</Text>
+          <BottomSheetScrollView
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.sheetContent}
+          >
+            <Text style={[styles.sheetTitle, { color: colors.text }]}>Edit Group</Text>
 
               <TextInput
                 style={[
@@ -598,15 +587,21 @@ export default function GroupsScreen() {
                   <Text style={styles.submitButtonText}>Update Group</Text>
                 </LinearGradient>
               </TouchableOpacity>
-            </ScrollView>
-          </BottomSheetView>
+          </BottomSheetScrollView>
         </BottomSheetModal>
+
       </View>
     </GradientBackground>
   );
 }
 
 const styles = StyleSheet.create({
+  gridContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    width: '100%',
+  },
   container: {
     flex: 1,
   },

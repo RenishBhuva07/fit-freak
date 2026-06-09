@@ -9,6 +9,8 @@ import { navigationRef } from '@/utils/NavigationService';
 import TabNavigator from '@/navigators/TabNavigator';
 
 import ProfileScreen from '@/screens/ProfileScreen';
+import GroupDetailScreen from '@/screens/GroupDetailScreen';
+import ActiveWorkoutScreen from '@/screens/ActiveWorkoutScreen';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Route param list — extend this as you add modal / auth screens
@@ -17,6 +19,8 @@ export type RootStackParamList = {
   /** Bottom tabs (Exercises, Groups, Today, Stats) */
   MainTabs: undefined;
   Profile: undefined;
+  GroupDetail: { groupId: string };
+  ActiveWorkout: undefined;
   // Add modal screens here, e.g.:
   // ExerciseDetail: { exerciseId: string };
   // Auth: undefined;
@@ -50,6 +54,16 @@ export default function Navigator() {
         
         {/* Profile Details */}
         <Stack.Screen name="Profile" component={ProfileScreen} />
+
+        {/* Group Details */}
+        <Stack.Screen name="GroupDetail" component={GroupDetailScreen} />
+
+        {/* Active Workout Screen */}
+        <Stack.Screen
+          name="ActiveWorkout"
+          component={ActiveWorkoutScreen}
+          options={{ animation: 'slide_from_bottom' }}
+        />
 
         {/*
          * ── Add modal / stack screens below ──────────────────────────────────

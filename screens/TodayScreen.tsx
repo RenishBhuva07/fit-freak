@@ -84,13 +84,16 @@ export default function TodayScreen() {
   const todayDayName = new Date().toLocaleDateString('en-US', { weekday: 'long' });
 
   const handleChallengePress = () => {
+    if (hasActiveWorkout) {
+      navigation.navigate('ActiveWorkout');
+      return;
+    }
     if (todaysGroups.length > 0) {
-      // Prioritize the first group that actually has exercises, falling back to the first group
-      const activeGroup = todaysGroups.find(g => g.exerciseIds.length > 0) || todaysGroups[0];
-      if (activeGroup.exerciseIds.length === 0) {
+      const todayGroup = todaysGroups[0];
+      if (todayGroup.exerciseIds.length === 0) {
         Alert.alert(
-          `${activeGroup.name}`,
-          `Your "${activeGroup.name}" doesn't have any exercises yet! Add exercises to this group under the Groups tab first.`,
+          `${todayDayName} Workout`,
+          `Your ${todayDayName} Workout group doesn't have any exercises yet! Add exercises to this group under the Groups tab first.`,
           [
             { text: 'Cancel', style: 'cancel' },
             {
@@ -102,7 +105,7 @@ export default function TodayScreen() {
           ]
         );
       } else {
-        handleStartWorkout(activeGroup.id);
+        handleStartWorkout(todayGroup.id);
       }
     } else {
       Alert.alert(
@@ -122,8 +125,6 @@ export default function TodayScreen() {
   };
 
   const [activeTab, setActiveTab] = useState<'All' | 'Running' | 'Cycling'>('All');
-  const [workoutPaused, setWorkoutPaused] = useState(false);
-  const [timerSeconds, setTimerSeconds] = useState(90); // 1:30 initial
   const calendarDays = getCalendarDays();
 
   const loading = exercisesLoading || groupsLoading || todayLoading;
@@ -132,30 +133,10 @@ export default function TodayScreen() {
   const hasActiveWorkout = todayCompletion && todayCompletion.groupId;
   const activeWorkoutGroup = groups.find(g => g.id === todayCompletion?.groupId);
 
-  // Active workout countdown timer logic
-  useEffect(() => {
-    let interval: any = null;
-    if (hasActiveWorkout && !workoutPaused && timerSeconds > 0) {
-      interval = setInterval(() => {
-        setTimerSeconds((prev) => prev - 1);
-      }, 1000);
-    } else if (timerSeconds === 0) {
-      // Auto loop timer or complete alert
-    }
-    return () => clearInterval(interval);
-  }, [hasActiveWorkout, workoutPaused, timerSeconds]);
-
-  const formatTimer = (sec: number) => {
-    const m = Math.floor(sec / 60).toString().padStart(2, '0');
-    const s = (sec % 60).toString().padStart(2, '0');
-    return `${m}:${s}`;
-  };
-
   const handleStartWorkout = async (groupId: string) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     await startWorkout(groupId);
-    setTimerSeconds(90); // reset standard workout resting countdown
-    setWorkoutPaused(false);
+    navigation.navigate('ActiveWorkout');
   };
 
   const handleMarkComplete = async (exerciseId: string, isComplete: boolean) => {
@@ -172,141 +153,6 @@ export default function TodayScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
     await resetWorkout();
   };
-
-  // Render "Your Workout" State (Third Phone Screen in Reference)
-  if (hasActiveWorkout && activeWorkoutGroup) {
-    return (
-      <View style={styles.workoutContainer}>
-        <StatusBar style="light" />
-
-        {/* Full Screen Background Graphic of Exercise */}
-        <LinearGradient
-          colors={['rgba(10, 10, 15, 0.4)', 'rgba(10, 10, 15, 0.95)']}
-          style={[StyleSheet.absoluteFillObject, { zIndex: 1 }]}
-        />
-
-        <View style={styles.workoutBgPlaceholder}>
-          {/* Stylized background lines mimicking the reference squat photo context */}
-          <Svg height="100%" width="100%" viewBox="0 0 100 100" preserveAspectRatio="none">
-            <Path d="M0,0 L100,0 L100,100 L0,100 Z" fill="#131317" />
-            <Circle cx="50" cy="40" r="30" fill="none" stroke="#25252b" strokeWidth="0.5" />
-            <Circle cx="50" cy="40" r="40" fill="none" stroke="#25252b" strokeWidth="0.2" />
-            <Path d="M20,10 L80,90 M80,10 L20,90" stroke="#25252b" strokeWidth="0.1" />
-          </Svg>
-
-          <View style={styles.squatTrainerTextContainer}>
-            <Text style={styles.trainerOverlayWord}>FITNESS</Text>
-          </View>
-        </View>
-
-        {/* Top Header */}
-        <View style={[styles.workoutHeader, { zIndex: 10 }]}>
-          <View>
-            <Text style={styles.workoutHeaderTitle}>Your Workout</Text>
-            <Text style={styles.workoutHeaderSubtitle}>{activeWorkoutGroup.name}</Text>
-          </View>
-
-          <View style={styles.workoutHeaderRight}>
-            <View style={styles.burnedContainer}>
-              <Text style={styles.burnedLabel}>Kcal Burned</Text>
-              <Text style={styles.burnedValue}>328</Text>
-            </View>
-            <View style={styles.caloriesIndicatorBars}>
-              {[1, 2, 3, 4, 5].map((i) => (
-                <View
-                  key={i}
-                  style={[
-                    styles.indicatorBar,
-                    i <= 3 ? { backgroundColor: '#E2D2FF' } : { backgroundColor: 'rgba(255, 255, 255, 0.2)' }
-                  ]}
-                />
-              ))}
-            </View>
-            <TouchableOpacity
-              style={styles.pauseButton}
-              onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                setWorkoutPaused(!workoutPaused);
-              }}
-            >
-              {workoutPaused ? <Play size={20} color="#000000" fill="#000" /> : <Pause size={20} color="#000000" fill="#000" />}
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* Scrollable list of exercises overlaid in workout */}
-        <ScrollView
-          style={[styles.workoutScroll, { zIndex: 5 }]}
-          contentContainerStyle={styles.workoutScrollContent}
-          showsVerticalScrollIndicator={false}
-        >
-          {todaysExercises.map((exercise, index) => {
-            const isComplete = isExerciseComplete(exercise.id);
-            const nextExerciseIndex = progress.completed;
-            const isHighlighted = !isComplete && index === nextExerciseIndex;
-
-            return (
-              <Animated.View
-                key={exercise.id}
-                entering={FadeInDown.delay(index * 80).duration(400)}
-                style={styles.exerciseCardWrapper}
-              >
-                <ExerciseCard
-                  exercise={exercise}
-                  isComplete={isComplete}
-                  showCompleteButton
-                  highlighted={isHighlighted}
-                  onComplete={() => handleMarkComplete(exercise.id, isComplete)}
-                />
-              </Animated.View>
-            );
-          })}
-
-          <TouchableOpacity
-            style={[styles.resetButton, { backgroundColor: 'rgba(255, 107, 107, 0.15)' }]}
-            onPress={handleResetWorkout}
-            activeOpacity={0.7}
-          >
-            <RefreshCw size={18} color="#FF6B6B" strokeWidth={2} />
-            <Text style={[styles.resetText, { color: '#FF6B6B' }]}>
-              Reset Workout Session
-            </Text>
-          </TouchableOpacity>
-        </ScrollView>
-
-        {/* Premium white curved timer overlay panel */}
-        <View style={[styles.workoutFooterPanel, { zIndex: 15 }]}>
-          <View style={styles.panelHandle} />
-
-          <View style={styles.timerControlRow}>
-            <View style={styles.timeStatsColumn}>
-              <Text style={styles.timeStatsLabel}>Elapsed</Text>
-              <Text style={styles.timeStatsValue}>04:30</Text>
-            </View>
-
-            <View style={styles.digitalTimerContainer}>
-              <Text style={styles.digitalTimer}>{formatTimer(timerSeconds)}</Text>
-            </View>
-
-            <View style={styles.timeStatsColumnAlignRight}>
-              <Text style={styles.timeStatsLabel}>Set</Text>
-              <Text style={styles.timeStatsValue}>2/5</Text>
-            </View>
-          </View>
-        </View>
-
-        <CelebrationScreen
-          visible={showCelebration}
-          streakCount={streakMeta.currentStreak}
-          isNewRecord={
-            streakMeta.currentStreak === streakMeta.bestStreak &&
-            streakMeta.currentStreak > 0
-          }
-          onDismiss={dismissCelebration}
-        />
-      </View>
-    );
-  }
 
   // Render "Your Activity" Dashboard Screen (First Phone Screen in Reference)
   return (
@@ -580,36 +426,69 @@ export default function TodayScreen() {
             </View>
           </Animated.View>
 
-          {/* Quick list of routines if available */}
-          {todaysGroups.length > 0 && (
+          {/* Quick list of routines or active workout resume */}
+          {hasActiveWorkout && activeWorkoutGroup ? (
             <Animated.View entering={FadeInDown.delay(400).duration(400)} style={styles.startWorkoutSection}>
-              <Text style={[styles.startWorkoutTitle, { color: colors.text }]}>Ready to workout?</Text>
-              {todaysGroups.map((group) => (
-                <TouchableOpacity
-                  key={group.id}
-                  style={[
-                    styles.quickStartRoutineCard,
-                    {
-                      backgroundColor: isDark ? 'rgba(255, 255, 255, 0.03)' : 'rgba(0, 0, 0, 0.03)',
-                      borderColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.06)',
-                    }
-                  ]}
-                  onPress={() => handleStartWorkout(group.id)}
-                  activeOpacity={0.8}
+              <Text style={[styles.startWorkoutTitle, { color: colors.text }]}>Active Workout</Text>
+              <TouchableOpacity
+                style={[
+                  styles.quickStartRoutineCard,
+                  {
+                    backgroundColor: 'rgba(215, 253, 81, 0.08)',
+                    borderColor: BRAND_COLORS.NEON_LIME,
+                    borderWidth: 1.5,
+                  }
+                ]}
+                onPress={() => navigation.navigate('ActiveWorkout')}
+                activeOpacity={0.8}
+              >
+                <View style={styles.quickStartLeft}>
+                  <Text style={[styles.quickStartRoutineName, { color: colors.text }]}>
+                    {activeWorkoutGroup.name}
+                  </Text>
+                  <Text style={[styles.quickStartRoutineDuration, { color: BRAND_COLORS.NEON_LIME, fontFamily: FONTS.bold }]}>
+                    In Progress • {progress.completed}/{progress.total} exercises completed
+                  </Text>
+                </View>
+                <LinearGradient
+                  colors={[BRAND_COLORS.NEON_LIME, '#cFFF04']}
+                  style={styles.playButtonIcon}
                 >
-                  <View style={styles.quickStartLeft}>
-                    <Text style={[styles.quickStartRoutineName, { color: colors.text }]}>{group.name}</Text>
-                    <Text style={[styles.quickStartRoutineDuration, { color: colors.textSecondary }]}>Estimated: 30 mins</Text>
-                  </View>
-                  <LinearGradient
-                    colors={[BRAND_COLORS.NEON_LIME, '#cFFF04']}
-                    style={styles.playButtonIcon}
-                  >
-                    <ChevronRightIcon size={20} color="#000000" strokeWidth={3} />
-                  </LinearGradient>
-                </TouchableOpacity>
-              ))}
+                  <ChevronRightIcon size={20} color="#000000" strokeWidth={3} />
+                </LinearGradient>
+              </TouchableOpacity>
             </Animated.View>
+          ) : (
+            todaysGroups.length > 0 && (
+              <Animated.View entering={FadeInDown.delay(400).duration(400)} style={styles.startWorkoutSection}>
+                <Text style={[styles.startWorkoutTitle, { color: colors.text }]}>Ready to workout?</Text>
+                {todaysGroups.map((group) => (
+                  <TouchableOpacity
+                    key={group.id}
+                    style={[
+                      styles.quickStartRoutineCard,
+                      {
+                        backgroundColor: isDark ? 'rgba(255, 255, 255, 0.03)' : 'rgba(0, 0, 0, 0.03)',
+                        borderColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.06)',
+                      }
+                    ]}
+                    onPress={() => handleStartWorkout(group.id)}
+                    activeOpacity={0.8}
+                  >
+                    <View style={styles.quickStartLeft}>
+                      <Text style={[styles.quickStartRoutineName, { color: colors.text }]}>{group.name}</Text>
+                      <Text style={[styles.quickStartRoutineDuration, { color: colors.textSecondary }]}>Estimated: 30 mins</Text>
+                    </View>
+                    <LinearGradient
+                      colors={[BRAND_COLORS.NEON_LIME, '#cFFF04']}
+                      style={styles.playButtonIcon}
+                    >
+                      <ChevronRightIcon size={20} color="#000000" strokeWidth={3} />
+                    </LinearGradient>
+                  </TouchableOpacity>
+                ))}
+              </Animated.View>
+            )
           )}
         </ScrollView>
       </View>

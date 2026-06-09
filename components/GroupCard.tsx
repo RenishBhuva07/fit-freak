@@ -1,17 +1,17 @@
-import { View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native';
-import { Grid, Clock, ChevronDown, ChevronUp, Dumbbell } from 'lucide-react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Platform, Dimensions } from 'react-native';
+import { Dumbbell, Trophy, Calendar, Flame, Zap, Star, Heart, Activity } from 'lucide-react-native';
 import { WorkoutGroup, Exercise } from '@/types/data';
 import { useTheme } from '@/hooks/useTheme';
-import { useState } from 'react';
-import { LinearGradient } from 'expo-linear-gradient';
-import { MUSCLE_GROUP_COLORS, FONTS, BRAND_COLORS } from '@/constants';
+import { FONTS } from '@/constants';
+
+const { width } = Dimensions.get('window');
+const CARD_WIDTH = (width - 54) / 2;
 
 interface GroupCardProps {
   group: WorkoutGroup;
   exercises: Exercise[];
   estimatedDuration: number;
   onPress?: () => void;
-  expanded?: boolean;
 }
 
 export function GroupCard({
@@ -19,146 +19,77 @@ export function GroupCard({
   exercises,
   estimatedDuration,
   onPress,
-  expanded: externalExpanded,
 }: GroupCardProps) {
   const { colors, isDark } = useTheme();
-  const [internalExpanded, setInternalExpanded] = useState(false);
-  const expanded = externalExpanded !== undefined ? externalExpanded : internalExpanded;
+
+  // Map background watermark icon based on group id/name
+  const renderBackgroundIcon = () => {
+    const iconSize = 88;
+    const iconColor = 'rgba(10, 10, 15, 0.06)'; // Subtle dark watermark for pastels
+    const normalizedId = group.id.toLowerCase();
+    
+    let IconComponent = Activity;
+    
+    if (normalizedId.includes('mon')) IconComponent = Dumbbell;
+    else if (normalizedId.includes('tue')) IconComponent = Trophy;
+    else if (normalizedId.includes('wed')) IconComponent = Calendar;
+    else if (normalizedId.includes('thu')) IconComponent = Flame;
+    else if (normalizedId.includes('fri')) IconComponent = Zap;
+    else if (normalizedId.includes('sat')) IconComponent = Star;
+    else if (normalizedId.includes('sun')) IconComponent = Heart;
+    else if (normalizedId.includes('all-days')) IconComponent = Activity;
+
+    return (
+      <View style={styles.backgroundIcon} pointerEvents="none">
+        <IconComponent size={iconSize} color={iconColor} strokeWidth={1.4} />
+      </View>
+    );
+  };
 
   return (
     <TouchableOpacity
-      onPress={() => {
-        setInternalExpanded(!internalExpanded);
-        onPress?.();
-      }}
-      activeOpacity={0.8}
+      onPress={onPress}
+      activeOpacity={0.85}
+      style={styles.cardWrapper}
     >
       <View
         style={[
           styles.container,
           {
-            backgroundColor: Platform.OS === 'android'
-              ? (isDark ? BRAND_COLORS.CHARCOAL_CARD : '#ffffff')
-              : (isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(255, 255, 255, 0.6)'),
-            borderColor: isDark
-              ? 'rgba(255, 255, 255, 0.08)'
-              : 'rgba(255, 255, 255, 0.5)',
-            elevation: Platform.OS === 'android' ? 2 : 0,
+            backgroundColor: group.color,
+            borderColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)',
           },
         ]}
       >
+        {/* Background watermark icon */}
+        {renderBackgroundIcon()}
+
         <View style={styles.content}>
-          <View style={styles.header}>
-            <View style={styles.leftContent}>
-              <LinearGradient
-                colors={[group.color, `${group.color}cc`]}
-                style={styles.colorBar}
-              />
-              <View style={styles.titleContainer}>
-                <Text style={[styles.name, { color: colors.text }]} numberOfLines={1}>
-                  {group.name}
-                </Text>
-                <View style={styles.metaRow}>
-                  <View style={styles.metaItem}>
-                    <Dumbbell size={14} color={colors.textTertiary} strokeWidth={2} />
-                    <Text style={[styles.metaText, { color: colors.textSecondary }]}>
-                      {exercises.length} exercises
-                    </Text>
-                  </View>
-                  <View style={styles.metaItem}>
-                    <Clock size={14} color={colors.textTertiary} strokeWidth={2} />
-                    <Text style={[styles.metaText, { color: colors.textSecondary }]}>
-                      ~{estimatedDuration} min
-                    </Text>
-                  </View>
-                </View>
-              </View>
-            </View>
-            <View style={styles.rightContent}>
-              <View style={styles.daysContainer}>
-                {group.days.slice(0, 3).map((day) => (
-                  <View
-                    key={day}
-                    style={[
-                      styles.dayBadge,
-                      {
-                        backgroundColor: `${group.color}25`,
-                        borderColor: group.color,
-                      },
-                    ]}
-                  >
-                    <Text style={[styles.dayText, { color: group.color }]}>{day}</Text>
-                  </View>
-                ))}
-                {group.days.length > 3 && (
-                  <View
-                    style={[
-                      styles.dayBadge,
-                      {
-                        backgroundColor: `${group.color}15`,
-                        borderColor: group.color,
-                      },
-                    ]}
-                  >
-                    <Text style={[styles.dayText, { color: group.color }]}>
-                      +{group.days.length - 3}
-                    </Text>
-                  </View>
-                )}
-              </View>
-              {expanded ? (
-                <ChevronUp size={20} color={colors.textTertiary} strokeWidth={2} />
-              ) : (
-                <ChevronDown size={20} color={colors.textTertiary} strokeWidth={2} />
-              )}
-            </View>
+          <Text style={styles.name} numberOfLines={1}>
+            {group.name}
+          </Text>
+
+          <View style={styles.statsContainer}>
+            <Text style={styles.statsText}>
+              {exercises.length} exercises
+            </Text>
+            <Text style={styles.statsText}>
+              •  ~{estimatedDuration} min
+            </Text>
           </View>
 
-          {expanded && exercises.length > 0 && (
-            <View
-              style={[
-                styles.exerciseList,
-                {
-                  borderTopColor: isDark
-                    ? 'rgba(255, 255, 255, 0.08)'
-                    : 'rgba(0, 0, 0, 0.05)',
-                },
-              ]}
-            >
-              {exercises.map((ex, index) => (
-                <View key={ex.id} style={styles.exerciseItem}>
-                  <View style={styles.exerciseNumberContainer}>
-                    <LinearGradient
-                      colors={[group.color, `${group.color}cc`]}
-                      style={styles.exerciseNumberGradient}
-                    >
-                      <Text style={styles.exerciseNumber}>{index + 1}</Text>
-                    </LinearGradient>
-                  </View>
-                  <Text
-                    style={[styles.exerciseName, { color: colors.text }]}
-                    numberOfLines={1}
-                  >
-                    {ex.name}
-                  </Text>
-                  <View
-                    style={[
-                      styles.exerciseSetsBadge,
-                      {
-                        backgroundColor: isDark
-                          ? 'rgba(255, 255, 255, 0.08)'
-                          : 'rgba(0, 0, 0, 0.05)',
-                      },
-                    ]}
-                  >
-                    <Text style={[styles.exerciseSets, { color: colors.textSecondary }]}>
-                      {ex.sets}×{ex.reps}
-                    </Text>
-                  </View>
-                </View>
-              ))}
-            </View>
-          )}
+          <View style={styles.daysContainer}>
+            {group.days.slice(0, 3).map((day) => (
+              <View key={day} style={styles.dayBadge}>
+                <Text style={styles.dayText}>{day}</Text>
+              </View>
+            ))}
+            {group.days.length > 3 && (
+              <View style={styles.dayBadge}>
+                <Text style={styles.dayText}>+{group.days.length - 3}</Text>
+              </View>
+            )}
+          </View>
         </View>
       </View>
     </TouchableOpacity>
@@ -166,112 +97,76 @@ export function GroupCard({
 }
 
 const styles = StyleSheet.create({
+  cardWrapper: {
+    width: CARD_WIDTH,
+    marginBottom: 14,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000000',
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.06,
+        shadowRadius: 10,
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
+  },
   container: {
-    borderRadius: 20,
+    height: 132,
+    borderRadius: 22,
     borderWidth: 1,
-    shadowColor: '#000',
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
+    overflow: 'hidden',
+    position: 'relative',
   },
   content: {
     padding: 16,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
+    height: '100%',
     justifyContent: 'space-between',
-  },
-  leftContent: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    flex: 1,
-  },
-  colorBar: {
-    width: 4,
-    height: 50,
-    borderRadius: 2,
-    marginRight: 14,
-  },
-  titleContainer: {
-    flex: 1,
+    zIndex: 1,
   },
   name: {
-    fontSize: 18,
+    fontSize: 16,
     fontFamily: FONTS.display,
-    marginBottom: 6,
+    fontWeight: '800',
+    color: '#0A0A0F', // Legible rich black text on light pastel card backgrounds
+    letterSpacing: -0.3,
   },
-  metaRow: {
+  statsContainer: {
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: 16,
+    flexWrap: 'wrap',
+    gap: 4,
+    marginTop: 2,
   },
-  metaItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  metaText: {
-    fontSize: 13,
+  statsText: {
+    fontSize: 11,
     fontFamily: FONTS.medium,
-  },
-  rightContent: {
-    alignItems: 'flex-end',
-    gap: 8,
+    fontWeight: '600',
+    color: 'rgba(10, 10, 15, 0.65)',
   },
   daysContainer: {
     flexDirection: 'row',
     gap: 4,
-    flexWrap: 'wrap',
-    justifyContent: 'flex-end',
+    marginTop: 8,
   },
   dayBadge: {
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 8,
-    borderWidth: 1,
+    backgroundColor: 'rgba(10, 10, 15, 0.08)',
   },
   dayText: {
-    fontSize: 10,
+    fontSize: 9,
     fontFamily: FONTS.bold,
+    fontWeight: '700',
+    color: '#0A0A0F',
   },
-  exerciseList: {
-    marginTop: 16,
-    paddingTop: 16,
-    borderTopWidth: 1,
-  },
-  exerciseItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 8,
-  },
-  exerciseNumberContainer: {
-    marginRight: 12,
-  },
-  exerciseNumberGradient: {
-    width: 24,
-    height: 24,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  exerciseNumber: {
-    color: '#FFFFFF',
-    fontSize: 12,
-    fontFamily: FONTS.bold,
-  },
-  exerciseName: {
-    flex: 1,
-    fontSize: 14,
-    fontFamily: FONTS.medium,
-  },
-  exerciseSetsBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 8,
-  },
-  exerciseSets: {
-    fontSize: 12,
-    fontFamily: FONTS.bold,
+  backgroundIcon: {
+    position: 'absolute',
+    right: -10,
+    bottom: -12,
+    opacity: 0.85,
+    transform: [{ rotate: '-15deg' }],
+    zIndex: 0,
   },
 });

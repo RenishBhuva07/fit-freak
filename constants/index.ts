@@ -126,12 +126,12 @@ export const STORAGE_KEYS = {
 };
 
 export const GROUP_COLORS = [
-  '#FF6B6B',
-  '#4ECDC4',
-  '#FFE66D',
-  '#667eea',
-  '#C44DFF',
-  '#FF69B4',
-  '#45B7D1',
-  '#F7931E',
+  '#E6CFFF', // Soft Purple
+  '#C4D6FF', // Soft Blue
+  '#D6FD53', // Neon Lime
+  '#FFC4C4', // Soft Pink/Red
+  '#FFECA1', // Soft Yellow/Gold
+  '#C2F9BB', // Soft Mint
+  '#C4FAF8', // Soft Teal/Cyan
+  '#FFD6EC', // Soft Rose
 ];

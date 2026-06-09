@@ -22,9 +22,9 @@ export const getDefaultGroups = (): WorkoutGroup[] => {
     color: GROUP_COLORS[idx % GROUP_COLORS.length],
   }));
 
-  // Add the "All Days Workout" group active on all days
+  // Add "All Days Workout" pre-seeded group
   defaultGroups.push({
-    id: 'day-group-all',
+    id: 'day-group-all-days',
     name: 'All Days Workout',
     exerciseIds: [],
     days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
@@ -55,7 +55,6 @@ export const storage = {
     await AsyncStorage.setItem(STORAGE_KEYS.EXERCISES, JSON.stringify(exercises));
   },
 
-  // Groups
   async getGroups(): Promise<WorkoutGroup[]> {
     try {
       const data = await AsyncStorage.getItem(STORAGE_KEYS.GROUPS);
@@ -64,7 +63,35 @@ export const storage = {
         await this.setGroups(defaultGroups);
         return defaultGroups;
       }
-      return JSON.parse(data);
+      
+      const parsed: WorkoutGroup[] = JSON.parse(data);
+      
+      // Migrate old bright colors to matching new soft pastel/stats-matching colors
+      const colorMap: Record<string, string> = {
+        '#FF6B6B': '#FFC4C4', // Soft Coral/Pink
+        '#4ECDC4': '#C4FAF8', // Soft Cyan
+        '#FFE66D': '#FFECA1', // Soft Yellow
+        '#667eea': '#C4D6FF', // Soft Blue
+        '#C44DFF': '#E6CFFF', // Soft Purple
+        '#FF69B4': '#FFD6EC', // Soft Rose
+        '#45B7D1': '#C4FAF8', // Soft Cyan
+        '#F7931E': '#FFECA1', // Soft Gold
+      };
+      
+      let needsSave = false;
+      const migrated = parsed.map(g => {
+        if (colorMap[g.color]) {
+          needsSave = true;
+          return { ...g, color: colorMap[g.color] };
+        }
+        return g;
+      });
+      
+      if (needsSave) {
+        await this.setGroups(migrated);
+      }
+      
+      return migrated;
     } catch (error) {
       console.error('Error getting groups:', error);
       return [];

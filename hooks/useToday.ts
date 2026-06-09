@@ -190,6 +190,22 @@ export function useToday(exercises: Exercise[], groups: WorkoutGroup[]) {
     setShowCelebration(false);
   }, []);
 
+  const completeWorkout = useCallback(async () => {
+    if (!todayCompletion || !todayCompletion.groupId) return;
+    const group = groups.find(g => g.id === todayCompletion.groupId);
+    if (!group) return;
+
+    const updatedCompletion: TodayCompletion = {
+      ...todayCompletion,
+      completedExerciseIds: group.exerciseIds,
+    };
+
+    setTodayCompletion(updatedCompletion);
+    await storage.setTodayCompletion(updatedCompletion);
+    await markDayComplete(updatedCompletion);
+    setShowCelebration(true);
+  }, [todayCompletion, groups, today]);
+
   return {
     todayCompletion,
     todaysGroups,
@@ -204,6 +220,7 @@ export function useToday(exercises: Exercise[], groups: WorkoutGroup[]) {
     isExerciseComplete,
     showCelebration,
     dismissCelebration,
+    completeWorkout,
     refreshToday: loadTodayCompletion,
   };
 }
