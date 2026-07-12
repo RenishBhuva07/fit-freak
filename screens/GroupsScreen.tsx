@@ -8,6 +8,7 @@ import {
   Alert,
   TextInput,
   Platform,
+  FlatList,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { Trash2, Edit2, Plus, Clock, Dumbbell, Play } from 'lucide-react-native';
@@ -30,6 +31,16 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 
 export default function GroupsScreen() {
   const { colors, isDark } = useTheme();
+
+  const getReadableTextColor = (hex: string) => {
+    const cleaned = hex.replace('#', '');
+    const r = parseInt(cleaned.substr(0, 2), 16) / 255;
+    const g = parseInt(cleaned.substr(2, 2), 16) / 255;
+    const b = parseInt(cleaned.substr(4, 2), 16) / 255;
+    const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+    return luminance > 0.75 ? '#0A0A0F' : '#FFFFFF';
+  };
+
   const { exercises, loading: exercisesLoading } = useExercises();
   const {
     groups,
@@ -47,7 +58,7 @@ export default function GroupsScreen() {
   const addSheetRef = useRef<BottomSheetModal>(null);
   const editSheetRef = useRef<BottomSheetModal>(null);
   const detailsSheetRef = useRef<BottomSheetModal>(null);
-  
+
   const editGroupId = useRef<string | null>(null);
 
   const [name, setName] = useState('');
@@ -236,174 +247,184 @@ export default function GroupsScreen() {
               Create Group
             </Text>
 
-              <TextInput
-                style={[
-                  styles.input,
-                  {
-                    backgroundColor: isDark
-                      ? 'rgba(255, 255, 255, 0.08)'
-                      : 'rgba(0, 0, 0, 0.03)',
-                    color: colors.text,
-                  },
-                ]}
-                placeholder="Group name (e.g., Chest + Biceps)"
-                placeholderTextColor={colors.textTertiary}
-                value={name}
-                onChangeText={setName}
-              />
+            <TextInput
+              style={[
+                styles.input,
+                {
+                  backgroundColor: isDark
+                    ? 'rgba(255, 255, 255, 0.08)'
+                    : 'rgba(0, 0, 0, 0.03)',
+                  color: colors.text,
+                },
+              ]}
+              placeholder="Group name (e.g., Chest + Biceps)"
+              placeholderTextColor={colors.textTertiary}
+              value={name}
+              onChangeText={setName}
+            />
 
-              <Text style={[styles.label, { color: colors.textSecondary }]}>Color</Text>
-              <View style={styles.colorRow}>
-                {GROUP_COLORS.map((c) => (
-                  <TouchableOpacity
-                    key={c}
-                    style={[
-                      styles.colorChip,
-                      {
-                        backgroundColor: c,
-                        borderColor: color === c ? '#FFFFFF' : 'transparent',
-                        borderWidth: color === c ? 3 : 0,
-                        shadowColor: c,
-                        shadowOpacity: color === c ? 0.5 : 0,
-                        shadowRadius: 8,
-                      },
-                    ]}
-                    onPress={() => setColor(c)}
-                    activeOpacity={0.7}
-                  />
-                ))}
-              </View>
-
-              <Text style={[styles.label, { color: colors.textSecondary }]}>Days</Text>
-              <View style={styles.daysRow}>
-                {DAYS_OF_WEEK.map((day) => (
-                  <TouchableOpacity
-                    key={day}
-                    style={[
-                      styles.dayChip,
-                      {
-                        backgroundColor: selectedDays.includes(day)
-                          ? color
-                          : isDark
-                            ? 'rgba(255, 255, 255, 0.08)'
-                            : 'rgba(0, 0, 0, 0.03)',
-                        borderColor: color,
-                      },
-                    ]}
-                    onPress={() => toggleDay(day)}
-                    activeOpacity={0.7}
-                  >
-                    <Text
-                      style={[
-                        styles.dayChipText,
-                        { color: selectedDays.includes(day) ? '#FFFFFF' : color },
-                      ]}
-                    >
-                      {day}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-
-              <Text style={[styles.label, { color: colors.textSecondary }]}>
-                Exercises ({selectedExerciseIds.length})
-              </Text>
-              <TouchableOpacity
-                style={[
-                  styles.exercisePickerToggle,
-                  {
-                    backgroundColor: isDark
-                      ? 'rgba(255, 255, 255, 0.08)'
-                      : 'rgba(0, 0, 0, 0.03)',
-                  },
-                ]}
-                onPress={() => setShowExercisePicker(!showExercisePicker)}
-                activeOpacity={0.7}
-              >
-                <Text style={[styles.exercisePickerText, { color: colors.text }]}>
-                  {selectedExerciseIds.length > 0
-                    ? formatExercises(selectedExerciseIds)
-                    : 'Select exercises'}
-                </Text>
-                <Text style={[styles.tapText, { color: colors.accent }]}>
-                  Tap to edit
-                </Text>
-              </TouchableOpacity>
-
-              {showExercisePicker && (
-                <View
+            <Text style={[styles.label, { color: colors.textSecondary }]}>Color</Text>
+            <FlatList
+              data={GROUP_COLORS}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              keyExtractor={(item) => item}
+              contentContainerStyle={{ paddingVertical: 8, paddingRight: 8, alignItems: 'center' }}
+              renderItem={({ item: c }) => (
+                <TouchableOpacity
+                  key={c}
                   style={[
-                    styles.exercisePicker,
+                    styles.colorChip,
                     {
-                      backgroundColor: isDark
-                        ? 'rgba(255, 255, 255, 0.04)'
-                        : 'rgba(0, 0, 0, 0.02)',
+                      backgroundColor: c,
+                      borderColor: color === c ? '#FFFFFF' : isDark ? 'rgba(255,255,255,0.18)' : 'rgba(0,0,0,0.12)',
+                      borderWidth: color === c ? 3 : 1.5,
+                      shadowColor: '#000',
+                      shadowOpacity: 0.12,
+                      shadowRadius: 6,
+                      shadowOffset: { width: 0, height: 4 },
+                      elevation: 4,
+                      marginRight: 14,
                     },
                   ]}
+                  onPress={() => setColor(c)}
+                  activeOpacity={0.7}
+                />
+              )}
+            />
+
+            <Text style={[styles.label, { color: colors.textSecondary }]}>Days</Text>
+            <View style={styles.daysRow}>
+              {DAYS_OF_WEEK.map((day) => (
+                <TouchableOpacity
+                  key={day}
+                  style={[
+                    styles.dayChip,
+                    {
+                      backgroundColor: selectedDays.includes(day)
+                        ? color
+                        : isDark
+                          ? 'rgba(255, 255, 255, 0.08)'
+                          : 'rgba(0, 0, 0, 0.03)',
+                      borderColor: selectedDays.includes(day)
+                        ? color
+                        : isDark
+                          ? 'rgba(255,255,255,0.12)'
+                          : 'rgba(0,0,0,0.12)',
+                    },
+                  ]}
+                  onPress={() => toggleDay(day)}
+                  activeOpacity={0.7}
                 >
-                  {MUSCLE_GROUPS.map((group) => {
-                    const groupExercises = exercises.filter(
-                      (ex) => ex.muscleGroup === group
-                    );
-                    if (groupExercises.length === 0) return null;
-                    return (
-                      <View key={group} style={styles.muscleGroup}>
-                        <Text style={[styles.muscleGroupName, { color: colors.text }]}>
-                          {group}
-                        </Text>
-                        {groupExercises.map((ex) => (
-                          <TouchableOpacity
-                            key={ex.id}
+                  <Text
+                    style={[
+                      styles.dayChipText,
+                      {
+                        color: selectedDays.includes(day)
+                          ? getReadableTextColor(color)
+                          : colors.text,
+                      },
+                    ]}
+                  >
+                    {day}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            <Text style={[styles.label, { color: colors.textSecondary }]}>Exercises ({selectedExerciseIds.length})</Text>
+            <TouchableOpacity
+              style={[
+                styles.exercisePickerToggle,
+                {
+                  backgroundColor: isDark
+                    ? 'rgba(255, 255, 255, 0.08)'
+                    : 'rgba(0, 0, 0, 0.03)',
+                },
+              ]}
+              onPress={() => setShowExercisePicker(!showExercisePicker)}
+              activeOpacity={0.7}
+            >
+              <Text style={[styles.exercisePickerText, { color: colors.text }]}>
+                {selectedExerciseIds.length > 0
+                  ? formatExercises(selectedExerciseIds)
+                  : 'Select exercises'}
+              </Text>
+              <Text style={[styles.tapText, { color: colors.accent }]}>Tap to edit</Text>
+            </TouchableOpacity>
+
+            {showExercisePicker && (
+              <View
+                style={[
+                  styles.exercisePicker,
+                  {
+                    backgroundColor: isDark
+                      ? 'rgba(255, 255, 255, 0.04)'
+                      : 'rgba(0, 0, 0, 0.02)',
+                  },
+                ]}
+              >
+                {MUSCLE_GROUPS.map((group) => {
+                  const groupExercises = exercises.filter(
+                    (ex) => ex.muscleGroup === group
+                  );
+                  if (groupExercises.length === 0) return null;
+                  return (
+                    <View key={group} style={styles.muscleGroup}>
+                      <Text style={[styles.muscleGroupName, { color: colors.text }]}> {group}</Text>
+                      {groupExercises.map((ex) => (
+                        <TouchableOpacity
+                          key={ex.id}
+                          style={[
+                            styles.exerciseChip,
+                            {
+                              backgroundColor: selectedExerciseIds.includes(ex.id)
+                                ? colors.accent
+                                : isDark
+                                  ? 'rgba(255, 255, 255, 0.08)'
+                                  : 'rgba(0, 0, 0, 0.03)',
+                              borderColor: isDark
+                                ? 'rgba(255, 255, 255, 0.1)'
+                                : 'rgba(0, 0, 0, 0.06)',
+                            },
+                          ]}
+                          onPress={() => toggleExercise(ex.id)}
+                          activeOpacity={0.7}
+                        >
+                          <Text
                             style={[
-                              styles.exerciseChip,
+                              styles.exerciseChipText,
                               {
-                                backgroundColor: selectedExerciseIds.includes(ex.id)
-                                  ? colors.accent
-                                  : isDark
-                                    ? 'rgba(255, 255, 255, 0.08)'
-                                    : 'rgba(0, 0, 0, 0.03)',
-                                borderColor: isDark
-                                  ? 'rgba(255, 255, 255, 0.1)'
-                                  : 'rgba(0, 0, 0, 0.06)',
+                                color: selectedExerciseIds.includes(ex.id)
+                                  ? '#FFFFFF'
+                                  : colors.text,
                               },
                             ]}
-                            onPress={() => toggleExercise(ex.id)}
-                            activeOpacity={0.7}
                           >
-                            <Text
-                              style={[
-                                styles.exerciseChipText,
-                                {
-                                  color: selectedExerciseIds.includes(ex.id)
-                                    ? '#FFFFFF'
-                                    : colors.text,
-                                },
-                              ]}
-                            >
-                              {ex.name}
-                            </Text>
-                          </TouchableOpacity>
-                        ))}
-                      </View>
-                    );
-                  })}
-                </View>
-              )}
+                            {ex.name}
+                          </Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  );
+                })}
+              </View>
+            )}
 
-              <TouchableOpacity
-                style={styles.submitButtonContainer}
-                onPress={handleAddGroup}
-                activeOpacity={0.8}
+            <TouchableOpacity
+              style={styles.submitButtonContainer}
+              onPress={handleAddGroup}
+              activeOpacity={0.8}
+            >
+              <LinearGradient
+                colors={[colors.accent, '#764ba2']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.submitButton}
               >
-                <LinearGradient
-                  colors={[colors.accent, '#764ba2']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={styles.submitButton}
-                >
-                  <Text style={styles.submitButtonText}>Create Group</Text>
-                </LinearGradient>
-              </TouchableOpacity>
+                <Text style={styles.submitButtonText}>Create Group</Text>
+              </LinearGradient>
+            </TouchableOpacity>
           </BottomSheetScrollView>
         </BottomSheetModal>
 
@@ -424,169 +445,188 @@ export default function GroupsScreen() {
           >
             <Text style={[styles.sheetTitle, { color: colors.text }]}>Edit Group</Text>
 
-              <TextInput
-                style={[
-                  styles.input,
-                  {
-                    backgroundColor: isDark
-                      ? 'rgba(255, 255, 255, 0.08)'
-                      : 'rgba(0, 0, 0, 0.03)',
-                    color: colors.text,
-                  },
-                ]}
-                placeholder="Group name"
-                placeholderTextColor={colors.textTertiary}
-                value={name}
-                onChangeText={setName}
-              />
+            <TextInput
+              style={[
+                styles.input,
+                {
+                  backgroundColor: isDark
+                    ? 'rgba(255, 255, 255, 0.08)'
+                    : 'rgba(0, 0, 0, 0.03)',
+                  color: colors.text,
+                },
+              ]}
+              placeholder="Group name"
+              placeholderTextColor={colors.textTertiary}
+              value={name}
+              onChangeText={setName}
+            />
 
-              <Text style={[styles.label, { color: colors.textSecondary }]}>Color</Text>
-              <View style={styles.colorRow}>
-                {GROUP_COLORS.map((c) => (
-                  <TouchableOpacity
-                    key={c}
-                    style={[
-                      styles.colorChip,
-                      {
-                        backgroundColor: c,
-                        borderColor: color === c ? '#FFFFFF' : 'transparent',
-                        borderWidth: color === c ? 3 : 0,
-                      },
-                    ]}
-                    onPress={() => setColor(c)}
-                    activeOpacity={0.7}
-                  />
-                ))}
-              </View>
-
-              <Text style={[styles.label, { color: colors.textSecondary }]}>Days</Text>
-              <View style={styles.daysRow}>
-                {DAYS_OF_WEEK.map((day) => (
-                  <TouchableOpacity
-                    key={day}
-                    style={[
-                      styles.dayChip,
-                      {
-                        backgroundColor: selectedDays.includes(day)
-                          ? color
-                          : isDark
-                            ? 'rgba(255, 255, 255, 0.08)'
-                            : 'rgba(0, 0, 0, 0.03)',
-                        borderColor: color,
-                      },
-                    ]}
-                    onPress={() => toggleDay(day)}
-                    activeOpacity={0.7}
-                  >
-                    <Text
-                      style={[
-                        styles.dayChipText,
-                        { color: selectedDays.includes(day) ? '#FFFFFF' : color },
-                      ]}
-                    >
-                      {day}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-
-              <Text style={[styles.label, { color: colors.textSecondary }]}>
-                Exercises ({selectedExerciseIds.length})
-              </Text>
-              <TouchableOpacity
-                style={[
-                  styles.exercisePickerToggle,
-                  {
-                    backgroundColor: isDark
-                      ? 'rgba(255, 255, 255, 0.08)'
-                      : 'rgba(0, 0, 0, 0.03)',
-                  },
-                ]}
-                onPress={() => setShowExercisePicker(!showExercisePicker)}
-                activeOpacity={0.7}
-              >
-                <Text style={[styles.exercisePickerText, { color: colors.text }]}>
-                  {selectedExerciseIds.length > 0
-                    ? formatExercises(selectedExerciseIds)
-                    : 'Select exercises'}
-                </Text>
-                <Text style={[styles.tapText, { color: colors.accent }]}>Tap to edit</Text>
-              </TouchableOpacity>
-
-              {showExercisePicker && (
-                <View
+            <Text style={[styles.label, { color: colors.textSecondary }]}>Color</Text>
+            <FlatList
+              data={GROUP_COLORS}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              keyExtractor={(item) => item}
+              contentContainerStyle={{ paddingVertical: 12, paddingRight: 8, alignItems: 'center' }}
+              renderItem={({ item: c }) => (
+                <TouchableOpacity
+                  key={c}
                   style={[
-                    styles.exercisePicker,
+                    styles.colorChip,
                     {
-                      backgroundColor: isDark
-                        ? 'rgba(255, 255, 255, 0.04)'
-                        : 'rgba(0, 0, 0, 0.02)',
+                      backgroundColor: c,
+                      borderColor: color === c ? '#FFFFFF' : isDark ? 'rgba(255,255,255,0.18)' : 'rgba(0,0,0,0.12)',
+                      borderWidth: color === c ? 3 : 1.5,
+                      shadowColor: '#000',
+                      shadowOpacity: 0.12,
+                      shadowRadius: 6,
+                      shadowOffset: { width: 0, height: 4 },
+                      elevation: 4,
+                      marginRight: 14,
                     },
                   ]}
+                  onPress={() => setColor(c)}
+                  activeOpacity={0.7}
+                />
+              )}
+            />
+
+            <Text style={[styles.label, { color: colors.textSecondary }]}>Days</Text>
+            <View style={styles.daysRow}>
+              {DAYS_OF_WEEK.map((day) => (
+                <TouchableOpacity
+                  key={day}
+                  style={[
+                    styles.dayChip,
+                    {
+                      backgroundColor: selectedDays.includes(day)
+                        ? color
+                        : isDark
+                          ? 'rgba(255, 255, 255, 0.08)'
+                          : 'rgba(0, 0, 0, 0.03)',
+                      borderColor: selectedDays.includes(day)
+                        ? color
+                        : isDark
+                          ? 'rgba(255,255,255,0.12)'
+                          : 'rgba(0,0,0,0.12)',
+                    },
+                  ]}
+                  onPress={() => toggleDay(day)}
+                  activeOpacity={0.7}
                 >
-                  {MUSCLE_GROUPS.map((group) => {
-                    const groupExercises = exercises.filter(
-                      (ex) => ex.muscleGroup === group
-                    );
-                    if (groupExercises.length === 0) return null;
-                    return (
-                      <View key={group} style={styles.muscleGroup}>
-                        <Text style={[styles.muscleGroupName, { color: colors.text }]}>
-                          {group}
-                        </Text>
-                        {groupExercises.map((ex) => (
-                          <TouchableOpacity
-                            key={ex.id}
+                  <Text
+                    style={[
+                      styles.dayChipText,
+                      {
+                        color: selectedDays.includes(day)
+                          ? getReadableTextColor(color)
+                          : colors.text,
+                      },
+                    ]}
+                  >
+                    {day}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            <Text style={[styles.label, { color: colors.textSecondary }]}>
+              Exercises ({selectedExerciseIds.length})
+            </Text>
+            <TouchableOpacity
+              style={[
+                styles.exercisePickerToggle,
+                {
+                  backgroundColor: isDark
+                    ? 'rgba(255, 255, 255, 0.08)'
+                    : 'rgba(0, 0, 0, 0.03)',
+                },
+              ]}
+              onPress={() => setShowExercisePicker(!showExercisePicker)}
+              activeOpacity={0.7}
+            >
+              <Text style={[styles.exercisePickerText, { color: colors.text }]}>
+                {selectedExerciseIds.length > 0
+                  ? formatExercises(selectedExerciseIds)
+                  : 'Select exercises'}
+              </Text>
+              <Text style={[styles.tapText, { color: colors.accent }]}>Tap to edit</Text>
+            </TouchableOpacity>
+
+            {showExercisePicker && (
+              <View
+                style={[
+                  styles.exercisePicker,
+                  {
+                    backgroundColor: isDark
+                      ? 'rgba(255, 255, 255, 0.04)'
+                      : 'rgba(0, 0, 0, 0.02)',
+                  },
+                ]}
+              >
+                {MUSCLE_GROUPS.map((group) => {
+                  const groupExercises = exercises.filter(
+                    (ex) => ex.muscleGroup === group
+                  );
+                  if (groupExercises.length === 0) return null;
+                  return (
+                    <View key={group} style={styles.muscleGroup}>
+                      <Text style={[styles.muscleGroupName, { color: colors.text }]}>
+                        {group}
+                      </Text>
+                      {groupExercises.map((ex) => (
+                        <TouchableOpacity
+                          key={ex.id}
+                          style={[
+                            styles.exerciseChip,
+                            {
+                              backgroundColor: selectedExerciseIds.includes(ex.id)
+                                ? colors.accent
+                                : isDark
+                                  ? 'rgba(255, 255, 255, 0.08)'
+                                  : 'rgba(0, 0, 0, 0.03)',
+                              borderColor: isDark
+                                ? 'rgba(255, 255, 255, 0.1)'
+                                : 'rgba(0, 0, 0, 0.06)',
+                            },
+                          ]}
+                          onPress={() => toggleExercise(ex.id)}
+                          activeOpacity={0.7}
+                        >
+                          <Text
                             style={[
-                              styles.exerciseChip,
+                              styles.exerciseChipText,
                               {
-                                backgroundColor: selectedExerciseIds.includes(ex.id)
-                                  ? colors.accent
-                                  : isDark
-                                    ? 'rgba(255, 255, 255, 0.08)'
-                                    : 'rgba(0, 0, 0, 0.03)',
-                                borderColor: isDark
-                                  ? 'rgba(255, 255, 255, 0.1)'
-                                  : 'rgba(0, 0, 0, 0.06)',
+                                color: selectedExerciseIds.includes(ex.id)
+                                  ? '#FFFFFF'
+                                  : colors.text,
                               },
                             ]}
-                            onPress={() => toggleExercise(ex.id)}
-                            activeOpacity={0.7}
                           >
-                            <Text
-                              style={[
-                                styles.exerciseChipText,
-                                {
-                                  color: selectedExerciseIds.includes(ex.id)
-                                    ? '#FFFFFF'
-                                    : colors.text,
-                                },
-                              ]}
-                            >
-                              {ex.name}
-                            </Text>
-                          </TouchableOpacity>
-                        ))}
-                      </View>
-                    );
-                  })}
-                </View>
-              )}
+                            {ex.name}
+                          </Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  );
+                })}
+              </View>
+            )}
 
-              <TouchableOpacity
-                style={styles.submitButtonContainer}
-                onPress={handleUpdateGroup}
-                activeOpacity={0.8}
+            <TouchableOpacity
+              style={styles.submitButtonContainer}
+              onPress={handleUpdateGroup}
+              activeOpacity={0.8}
+            >
+              <LinearGradient
+                colors={[colors.accent, '#764ba2']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.submitButton}
               >
-                <LinearGradient
-                  colors={[colors.accent, '#764ba2']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={styles.submitButton}
-                >
-                  <Text style={styles.submitButtonText}>Update Group</Text>
-                </LinearGradient>
-              </TouchableOpacity>
+                <Text style={styles.submitButtonText}>Update Group</Text>
+              </LinearGradient>
+            </TouchableOpacity>
           </BottomSheetScrollView>
         </BottomSheetModal>
 
@@ -699,21 +739,27 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   colorChip: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 46,
+    height: 46,
+    borderRadius: 23,
+    borderWidth: 1.5,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   daysRow: {
     flexDirection: 'row',
-    gap: 8,
+    gap: 10,
     marginBottom: 16,
     flexWrap: 'wrap',
   },
   dayChip: {
     paddingHorizontal: 16,
     paddingVertical: 12,
-    borderRadius: 12,
+    borderRadius: 14,
     borderWidth: 1.5,
+    minWidth: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   dayChipText: {
     fontSize: 14,

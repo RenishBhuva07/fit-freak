@@ -47,6 +47,7 @@ export function useToday(exercises: Exercise[], groups: WorkoutGroup[]) {
       groupId,
     };
     setTodayCompletion(completion);
+    setShowCelebration(false);
     await storage.setTodayCompletion(completion);
   }, [today]);
 
@@ -69,6 +70,7 @@ export function useToday(exercises: Exercise[], groups: WorkoutGroup[]) {
       completedExerciseIds: todayCompletion.completedExerciseIds.filter(id => id !== exerciseId),
     };
     setTodayCompletion(updatedCompletion);
+    setShowCelebration(false);
     await storage.setTodayCompletion(updatedCompletion);
 
     // Check if we need to unmark the day as complete
@@ -78,11 +80,11 @@ export function useToday(exercises: Exercise[], groups: WorkoutGroup[]) {
       const updatedHistory = history.map(r =>
         r.date === today
           ? {
-              ...r,
-              completedExercises: updatedCompletion.completedExerciseIds.length,
-              isComplete: false,
-              completedAt: null,
-            }
+            ...r,
+            completedExercises: updatedCompletion.completedExerciseIds.length,
+            isComplete: false,
+            completedAt: null,
+          }
           : r
       );
       await storage.setStreakHistory(updatedHistory);
@@ -100,6 +102,7 @@ export function useToday(exercises: Exercise[], groups: WorkoutGroup[]) {
       completedExerciseIds: [],
     };
     setTodayCompletion(updatedCompletion);
+    setShowCelebration(false);
     await storage.setTodayCompletion(updatedCompletion);
 
     // Unmark day as complete if it was marked
@@ -109,11 +112,11 @@ export function useToday(exercises: Exercise[], groups: WorkoutGroup[]) {
       const updatedHistory = history.map(r =>
         r.date === today
           ? {
-              ...r,
-              completedExercises: 0,
-              isComplete: false,
-              completedAt: null,
-            }
+            ...r,
+            completedExercises: 0,
+            isComplete: false,
+            completedAt: null,
+          }
           : r
       );
       await storage.setStreakHistory(updatedHistory);

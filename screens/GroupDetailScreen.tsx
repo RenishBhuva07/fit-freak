@@ -47,9 +47,9 @@ export default function GroupDetailScreen() {
   const route = useRoute<any>();
   const navigation = useNavigation<any>();
   const { colors, isDark } = useTheme();
-  
+
   const { groupId } = route.params;
-  
+
   const { exercises, loading: exercisesLoading } = useExercises();
   const {
     groups,
@@ -59,16 +59,16 @@ export default function GroupDetailScreen() {
     getGroupExercises,
     getGroupEstimatedDuration,
   } = useGroups(exercises);
-  
+
   const { startWorkout } = useToday(exercises, groups);
-  
+
   const pickerSheetRef = useRef<BottomSheetModal>(null);
-  
+
   const [selectedExerciseIds, setSelectedExerciseIds] = useState<string[]>([]);
   const [pickerSearch, setPickerSearch] = useState('');
-  
+
   const group = groups.find((g) => g.id === groupId);
-  
+
   // Sync selected exercise IDs when group loads
   useEffect(() => {
     if (group) {
@@ -117,9 +117,9 @@ export default function GroupDetailScreen() {
     const iconSize = 130;
     const iconColor = 'rgba(10, 10, 15, 0.05)'; // Subtle dark watermark for pastels
     const normalizedId = group.id.toLowerCase();
-    
+
     let IconComponent = Activity;
-    
+
     if (normalizedId.includes('mon')) IconComponent = Dumbbell;
     else if (normalizedId.includes('tue')) IconComponent = Trophy;
     else if (normalizedId.includes('wed')) IconComponent = Calendar;
@@ -144,10 +144,10 @@ export default function GroupDetailScreen() {
       );
       return;
     }
-    
+
     await startWorkout(group.id);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    navigation.navigate('MainTabs', { screen: 'Today' });
+    navigation.navigate('ActiveWorkout');
   };
 
   const handleDeleteGroup = () => {

@@ -1,22 +1,11 @@
 import { View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native';
-import { Dumbbell, Check, Clock, Edit2, Trash2, Award } from 'lucide-react-native';
+import { Check, Clock, Edit2, Trash2, Award } from 'lucide-react-native';
 import { Exercise } from '@/types/data';
 import { MUSCLE_GROUP_COLORS, FONTS, BRAND_COLORS } from '@/constants';
 import { useTheme } from '@/hooks/useTheme';
 import { LinearGradient } from 'expo-linear-gradient';
-import Animated, {
-  FadeIn,
-  ZoomIn,
-  useAnimatedStyle,
-  withSpring,
-  useSharedValue,
-  withRepeat,
-  withTiming,
-  withSequence,
-} from 'react-native-reanimated';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import Svg, { Path } from 'react-native-svg';
-import LottieView from 'lottie-react-native';
 
 interface ExerciseCardProps {
   exercise: Exercise;
@@ -75,45 +64,9 @@ export function ExerciseCard({
 }: ExerciseCardProps) {
   const { colors, isDark } = useTheme();
   const muscleColor = MUSCLE_GROUP_COLORS[exercise.muscleGroup] || colors.accent;
-  
-  const scale = useSharedValue(1);
-  const pulse = useSharedValue(1);
-  const [lottieLoaded, setLottieLoaded] = useState(false);
-
-  // Setup breathing scale animation for completion status
-  useEffect(() => {
-    if (isComplete) {
-      scale.value = withSpring(0.97);
-    } else {
-      scale.value = withSpring(1);
-    }
-  }, [isComplete]);
-
-  // Setup infinite gentle pulse for the preview frame/dumbbell fallback
-  useEffect(() => {
-    pulse.value = withRepeat(
-      withSequence(
-        withTiming(1.08, { duration: 1400 }),
-        withTiming(1.0, { duration: 1400 })
-      ),
-      -1,
-      true
-    );
-  }, []);
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
-    opacity: isComplete ? 0.65 : 1,
-  }));
-
-  const pulseStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: pulse.value }],
-  }));
-
-  const lottieUrl = LOTTIE_URLS[exercise.muscleGroup];
 
   return (
-    <Animated.View entering={FadeIn.duration(350)} style={[animatedStyle, { width: '100%' }]}>
+    <View style={{ width: '100%' }}>
       <TouchableOpacity
         onPress={onPress}
         activeOpacity={0.85}
@@ -148,56 +101,30 @@ export function ExerciseCard({
               borderColor: highlighted
                 ? colors.accent
                 : isDark
-                ? 'rgba(255, 255, 255, 0.06)'
-                : 'rgba(0, 0, 0, 0.05)',
+                  ? 'rgba(255, 255, 255, 0.06)'
+                  : 'rgba(0, 0, 0, 0.05)',
             },
           ]}
         >
           {/* Main Card Content Layout */}
           <View style={styles.topRow}>
-            
+
             {/* 1. Left Side: Visual Showcase Container with glowing neon border */}
             <View style={styles.visualContainer}>
-              <Animated.View
+              <View
                 style={[
                   styles.visualFrame,
-                  pulseStyle,
                   {
-                    borderColor: highlighted
-                      ? colors.accent
-                      : isDark
-                      ? 'rgba(255, 255, 255, 0.08)'
-                      : 'rgba(0, 0, 0, 0.05)',
-                    backgroundColor: isDark
-                      ? 'rgba(255, 255, 255, 0.02)'
-                      : 'rgba(0, 0, 0, 0.02)',
+                    borderColor: highlighted ? colors.accent : colors.border,
+                    backgroundColor: colors.backgroundSecondary,
                   },
                 ]}
               >
-                {/* Glow Background Circle */}
-                <View
-                  style={[
-                    styles.visualGlow,
-                    { backgroundColor: `${muscleColor}15` },
-                  ]}
-                />
-
-                {/* Animated Dumbbell Fallback (rendered behind Lottie or while loading) */}
-                <View style={[styles.fallbackIcon, lottieLoaded && { opacity: 0.15 }]}>
+                <View style={[styles.visualGlow, { backgroundColor: `${muscleColor}15` }]} />
+                <View style={styles.fallbackIcon}>
                   <BarbellSvg color={muscleColor} />
                 </View>
-
-                {/* Lottie Animation (loads remote gym loops perfectly) */}
-                {lottieUrl && !isComplete && (
-                  <LottieView
-                    source={{ uri: lottieUrl }}
-                    style={styles.lottie}
-                    autoPlay
-                    loop
-                    onAnimationLoaded={() => setLottieLoaded(true)}
-                  />
-                )}
-              </Animated.View>
+              </View>
             </View>
 
             {/* 2. Middle: Premium Typography Details */}
@@ -235,33 +162,15 @@ export function ExerciseCard({
 
               {/* Set/Reps & Rest Stats */}
               <View style={styles.statsRow}>
-                <View
-                  style={[
-                    styles.statPill,
-                    {
-                      backgroundColor: isDark
-                        ? 'rgba(255, 255, 255, 0.04)'
-                        : 'rgba(0, 0, 0, 0.03)',
-                    },
-                  ]}
-                >
+                <View style={[styles.statPill, { backgroundColor: colors.backgroundSecondary }]}>
                   <Text style={[styles.statValue, { color: colors.text }]}>
-                    {exercise.sets} <Text style={styles.statLabel}>SETS</Text>
+                    {exercise.sets} <Text style={[styles.statLabel, { color: colors.textTertiary }]}>SETS</Text>
                   </Text>
                 </View>
 
-                <View
-                  style={[
-                    styles.statPill,
-                    {
-                      backgroundColor: isDark
-                        ? 'rgba(255, 255, 255, 0.04)'
-                        : 'rgba(0, 0, 0, 0.03)',
-                    },
-                  ]}
-                >
+                <View style={[styles.statPill, { backgroundColor: colors.backgroundSecondary }]}>
                   <Text style={[styles.statValue, { color: colors.text }]}>
-                    {exercise.reps} <Text style={styles.statLabel}>REPS</Text>
+                    {exercise.reps} <Text style={[styles.statLabel, { color: colors.textTertiary }]}>REPS</Text>
                   </Text>
                 </View>
 
@@ -362,9 +271,9 @@ export function ExerciseCard({
                 style={styles.completeButton}
               >
                 {isComplete ? (
-                  <Animated.View entering={ZoomIn.duration(250)} style={styles.completeButtonIcon}>
+                  <View style={styles.completeButtonIcon}>
                     <Check size={16} color="#FFFFFF" strokeWidth={3.5} />
-                  </Animated.View>
+                  </View>
                 ) : (
                   <View style={styles.completeButtonIcon}>
                     <Award size={16} color="#FFFFFF" strokeWidth={2} />
@@ -378,7 +287,7 @@ export function ExerciseCard({
           )}
         </View>
       </TouchableOpacity>
-    </Animated.View>
+    </View>
   );
 }
 

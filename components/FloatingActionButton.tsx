@@ -30,7 +30,7 @@ export function FloatingActionButton({ onPress, icon }: FloatingActionButtonProp
 const styles = StyleSheet.create({
   container: {
     position: 'absolute',
-    bottom: 100,
+    bottom: 140,
     right: 20,
     width: 64,
     height: 64,

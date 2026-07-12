@@ -12,6 +12,8 @@ interface CelebrationScreenProps {
   streakCount: number;
   isNewRecord?: boolean;
   onDismiss: () => void;
+  actionLabel?: string;
+  onAction?: () => void;
 }
 
 export function CelebrationScreen({
@@ -19,27 +21,16 @@ export function CelebrationScreen({
   streakCount,
   isNewRecord = false,
   onDismiss,
+  actionLabel,
+  onAction,
 }: CelebrationScreenProps) {
   const { colors } = useTheme();
-
-  useEffect(() => {
-    if (visible) {
-      const timer = setTimeout(() => {
-        onDismiss();
-      }, 4500);
-      return () => clearTimeout(timer);
-    }
-  }, [visible, onDismiss]);
 
   if (!visible) return null;
 
   return (
     <Animated.View entering={FadeIn.duration(300)} style={styles.container}>
-      <TouchableOpacity
-        style={StyleSheet.absoluteFillObject}
-        onPress={onDismiss}
-        activeOpacity={1}
-      />
+      <View style={StyleSheet.absoluteFillObject} />
 
       <Animated.View entering={ZoomIn.delay(200).duration(500)} style={styles.content}>
         {/* Confetti overlay */}
@@ -93,14 +84,17 @@ export function CelebrationScreen({
         )}
 
         <Animated.View entering={FadeIn.delay(700).duration(400)}>
-          <TouchableOpacity onPress={onDismiss} activeOpacity={0.8}>
+          <TouchableOpacity
+            onPress={onAction ?? onDismiss}
+            activeOpacity={0.8}
+          >
             <LinearGradient
               colors={[colors.accent, '#764ba2']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={styles.button}
             >
-              <Text style={styles.buttonText}>Keep Going</Text>
+              <Text style={styles.buttonText}>{actionLabel ?? 'Restart Session'}</Text>
             </LinearGradient>
           </TouchableOpacity>
         </Animated.View>

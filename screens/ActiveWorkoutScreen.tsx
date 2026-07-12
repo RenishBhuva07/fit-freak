@@ -11,9 +11,7 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
-import Animated, {
-  FadeInDown,
-} from 'react-native-reanimated';
+// animations removed for static exercise cards
 import { Play, Pause, ChevronLeft, RefreshCw } from 'lucide-react-native';
 import Svg, { Path, Circle } from 'react-native-svg';
 import { useTheme } from '@/hooks/useTheme';
@@ -30,9 +28,9 @@ import { BRAND_COLORS, FONTS } from '@/constants';
 const { width, height } = Dimensions.get('window');
 
 export default function ActiveWorkoutScreen() {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const { exercises } = useExercises();
-  const { groups } = useGroups(exercises);
+  const { groups, getGroupEstimatedDuration } = useGroups(exercises);
   const { streakMeta } = useStreak();
   const {
     todayCompletion,
@@ -50,27 +48,70 @@ export default function ActiveWorkoutScreen() {
 
   const navigation = useNavigation<any>();
   const [workoutPaused, setWorkoutPaused] = useState(false);
-  const [timerSeconds, setTimerSeconds] = useState(90); // 1:30 initial
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
 
   const todaysExercises = getTodaysExercises();
   const progress = getProgress();
   const activeWorkoutGroup = groups.find(g => g.id === todayCompletion?.groupId);
+  const estimatedDuration = activeWorkoutGroup ? getGroupEstimatedDuration(activeWorkoutGroup.id) : 0;
+  const burnRatePerMinute = 8;
+  const caloriesTarget = Math.max(Math.round(estimatedDuration * burnRatePerMinute), 120);
+  const caloriesBurned = progress.total > 0
+    ? Math.round((progress.completed / progress.total) * caloriesTarget)
+    : 0;
+  const calorieProgressLevel = progress.total > 0
+    ? Math.min(5, Math.max(1, Math.round((progress.completed / progress.total) * 5)))
+    : 3;
 
-  // Active workout countdown timer logic
+  useEffect(() => {
+    if (!todayCompletion) {
+      return;
+    }
+
+    setElapsedSeconds(0);
+    setWorkoutPaused(showCelebration ? true : false);
+  }, [todayCompletion?.groupId, showCelebration]);
+
+  useEffect(() => {
+    if (showCelebration) {
+      setWorkoutPaused(true);
+    }
+  }, [showCelebration]);
+
+  // Active workout elapsed timer logic
   useEffect(() => {
     let interval: any = null;
-    if (todayCompletion && !workoutPaused && timerSeconds > 0) {
+    if (todayCompletion && !workoutPaused && !showCelebration) {
       interval = setInterval(() => {
-        setTimerSeconds((prev) => prev - 1);
+        setElapsedSeconds((prev) => prev + 1);
       }, 1000);
     }
     return () => clearInterval(interval);
-  }, [todayCompletion, workoutPaused, timerSeconds]);
+  }, [todayCompletion, workoutPaused, showCelebration]);
 
   const formatTimer = (sec: number) => {
     const m = Math.floor(sec / 60).toString().padStart(2, '0');
     const s = (sec % 60).toString().padStart(2, '0');
     return `${m}:${s}`;
+  };
+
+  const handleToggleTimer = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setWorkoutPaused(prev => !prev);
+  };
+
+  const handleResetTimer = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    setElapsedSeconds(0);
+    setWorkoutPaused(true);
+  };
+
+  const handleRestartSession = async () => {
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    await resetWorkout();
+    setElapsedSeconds(0);
+    setWorkoutPaused(true);
+    dismissCelebration();
   };
 
   const handleMarkComplete = async (exerciseId: string, isComplete: boolean) => {
@@ -95,6 +136,8 @@ export default function ActiveWorkoutScreen() {
           onPress: async () => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
             await resetWorkout();
+            setElapsedSeconds(0);
+            setWorkoutPaused(true);
           }
         }
       ]
@@ -114,38 +157,38 @@ export default function ActiveWorkoutScreen() {
 
   if (!todayCompletion || !activeWorkoutGroup) {
     return (
-      <View style={styles.errorContainer}>
-        <Text style={styles.errorText}>No active workout found.</Text>
+      <View style={[styles.errorContainer, { backgroundColor: colors.background }]}>
+        <Text style={[styles.errorText, { color: colors.textSecondary }]}>No active workout found.</Text>
         <TouchableOpacity
-          style={styles.backToDashboardButton}
+          style={[styles.backToDashboardButton, { backgroundColor: colors.accentLight }]}
           onPress={() => navigation.navigate('MainTabs', { screen: 'Today' })}
         >
-          <Text style={styles.backButtonText}>Back to Dashboard</Text>
+          <Text style={[styles.backButtonText, { color: colors.text }]}>Back to Dashboard</Text>
         </TouchableOpacity>
       </View>
     );
   }
 
   return (
-    <View style={styles.workoutContainer}>
-      <StatusBar style="light" />
+    <View style={[styles.workoutContainer, { backgroundColor: colors.background }]}>
+      <StatusBar style={isDark ? 'light' : 'dark'} />
 
       {/* Full Screen Background Graphic of Exercise */}
       <LinearGradient
-        colors={['rgba(10, 10, 15, 0.4)', 'rgba(10, 10, 15, 0.95)']}
+        colors={[colors.backgroundSecondary, colors.backgroundTertiary]}
         style={[StyleSheet.absoluteFillObject, { zIndex: 1 }]}
       />
 
       <View style={styles.workoutBgPlaceholder}>
         <Svg height="100%" width="100%" viewBox="0 0 100 100" preserveAspectRatio="none">
-          <Path d="M0,0 L100,0 L100,100 L0,100 Z" fill="#131317" />
-          <Circle cx="50" cy="40" r="30" fill="none" stroke="#25252b" strokeWidth="0.5" />
-          <Circle cx="50" cy="40" r="40" fill="none" stroke="#25252b" strokeWidth="0.2" />
-          <Path d="M20,10 L80,90 M80,10 L20,90" stroke="#25252b" strokeWidth="0.1" />
+          <Path d="M0,0 L100,0 L100,100 L0,100 Z" fill={colors.backgroundTertiary} />
+          <Circle cx="50" cy="40" r="30" fill="none" stroke={colors.border} strokeWidth="0.5" />
+          <Circle cx="50" cy="40" r="40" fill="none" stroke={colors.border} strokeWidth="0.2" />
+          <Path d="M20,10 L80,90 M80,10 L20,90" stroke={colors.border} strokeWidth="0.1" />
         </Svg>
 
         <View style={styles.squatTrainerTextContainer}>
-          <Text style={styles.trainerOverlayWord}>FITNESS</Text>
+          <Text style={[styles.trainerOverlayWord, { color: colors.textTertiary }]}>FITNESS</Text>
         </View>
       </View>
 
@@ -153,24 +196,24 @@ export default function ActiveWorkoutScreen() {
       <View style={[styles.workoutHeader, { zIndex: 10 }]}>
         <View style={styles.headerLeftContainer}>
           <TouchableOpacity
-            style={styles.backArrowButton}
+            style={[styles.backArrowButton, { backgroundColor: colors.accentLight }]}
             onPress={() => {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
               navigation.goBack();
             }}
           >
-            <ChevronLeft size={24} color="#FFFFFF" strokeWidth={2.5} />
+            <ChevronLeft size={24} color={colors.text} strokeWidth={2.5} />
           </TouchableOpacity>
           <View style={styles.headerTitles}>
-            <Text style={styles.workoutHeaderTitle}>Your Workout</Text>
-            <Text style={styles.workoutHeaderSubtitle}>{activeWorkoutGroup.name}</Text>
+            <Text style={[styles.workoutHeaderTitle, { color: colors.text }]}>Your Workout</Text>
+            <Text style={[styles.workoutHeaderSubtitle, { color: colors.textSecondary }]}>{activeWorkoutGroup.name}</Text>
           </View>
         </View>
 
         <View style={styles.workoutHeaderRight}>
           <View style={styles.burnedContainer}>
-            <Text style={styles.burnedLabel}>Kcal Burned</Text>
-            <Text style={styles.burnedValue}>328</Text>
+            <Text style={[styles.burnedLabel, { color: colors.textSecondary }]}>Kcal Burned</Text>
+            <Text style={[styles.burnedValue, { color: colors.text }]}>{caloriesBurned}</Text>
           </View>
           <View style={styles.caloriesIndicatorBars}>
             {[1, 2, 3, 4, 5].map((i) => (
@@ -178,19 +221,19 @@ export default function ActiveWorkoutScreen() {
                 key={i}
                 style={[
                   styles.indicatorBar,
-                  i <= 3 ? { backgroundColor: '#E2D2FF' } : { backgroundColor: 'rgba(255, 255, 255, 0.2)' }
+                  i <= calorieProgressLevel ? { backgroundColor: colors.accentLight } : { backgroundColor: colors.border }
                 ]}
               />
             ))}
           </View>
           <TouchableOpacity
-            style={styles.pauseButton}
+            style={[styles.pauseButton, { backgroundColor: colors.card, shadowColor: colors.background }]}
             onPress={() => {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
               setWorkoutPaused(!workoutPaused);
             }}
           >
-            {workoutPaused ? <Play size={20} color="#000000" fill="#000" /> : <Pause size={20} color="#000000" fill="#000" />}
+            {workoutPaused ? <Play size={20} color={isDark ? colors.background : colors.text} fill={isDark ? colors.background : colors.text} /> : <Pause size={20} color={isDark ? colors.background : colors.text} fill={isDark ? colors.background : colors.text} />}
           </TouchableOpacity>
         </View>
       </View>
@@ -207,11 +250,7 @@ export default function ActiveWorkoutScreen() {
           const isHighlighted = !isComplete && index === nextExerciseIndex;
 
           return (
-            <Animated.View
-              key={exercise.id}
-              entering={FadeInDown.delay(index * 80).duration(400)}
-              style={styles.exerciseCardWrapper}
-            >
+            <View key={exercise.id} style={styles.exerciseCardWrapper}>
               <ExerciseCard
                 exercise={exercise}
                 isComplete={isComplete}
@@ -219,7 +258,7 @@ export default function ActiveWorkoutScreen() {
                 highlighted={isHighlighted}
                 onComplete={() => handleMarkComplete(exercise.id, isComplete)}
               />
-            </Animated.View>
+            </View>
           );
         })}
 
@@ -235,40 +274,51 @@ export default function ActiveWorkoutScreen() {
             end={{ x: 1, y: 0 }}
             style={styles.completeButtonGradient}
           >
-            <Text style={styles.completeButtonText}>Complete Session</Text>
+            <Text style={[styles.completeButtonText, { color: colors.background }]}>Complete Session</Text>
           </LinearGradient>
         </TouchableOpacity>
 
         {/* Reset Workout Session Button */}
         <TouchableOpacity
-          style={[styles.resetButton, { backgroundColor: 'rgba(255, 107, 107, 0.15)' }]}
+          style={[
+            styles.resetButton,
+            { backgroundColor: isDark ? 'rgba(255, 107, 107, 0.15)' : 'rgba(255, 107, 107, 0.08)' },
+          ]}
           onPress={handleResetWorkout}
           activeOpacity={0.7}
         >
-          <RefreshCw size={18} color="#FF6B6B" strokeWidth={2} />
-          <Text style={[styles.resetText, { color: '#FF6B6B' }]}>
-            Reset Workout Session
-          </Text>
+          <RefreshCw size={18} color={colors.error} strokeWidth={2} />
+          <Text style={[styles.resetText, { color: colors.error }]}>Reset Workout Session</Text>
         </TouchableOpacity>
       </ScrollView>
 
       {/* Premium white curved timer overlay panel */}
-      <View style={[styles.workoutFooterPanel, { zIndex: 15 }]}>
-        <View style={styles.panelHandle} />
+      <View style={[styles.workoutFooterPanel, { zIndex: 15, backgroundColor: colors.card, shadowColor: colors.background, shadowOpacity: 0.12 }]}>
+        <View style={[styles.panelHandle, { backgroundColor: colors.border }]} />
 
         <View style={styles.timerControlRow}>
           <View style={styles.timeStatsColumn}>
-            <Text style={styles.timeStatsLabel}>Elapsed</Text>
-            <Text style={styles.timeStatsValue}>04:30</Text>
+            <Text style={[styles.timeStatsLabel, { color: colors.textSecondary }]}>Elapsed</Text>
+            <Text style={[styles.timeStatsValue, { color: colors.text }]}>{formatTimer(elapsedSeconds)}</Text>
           </View>
 
           <View style={styles.digitalTimerContainer}>
-            <Text style={styles.digitalTimer}>{formatTimer(timerSeconds)}</Text>
+            <TouchableOpacity onPress={handleToggleTimer} activeOpacity={0.8}>
+              <Text style={[styles.digitalTimer, { color: colors.text }]}>{formatTimer(elapsedSeconds)}</Text>
+            </TouchableOpacity>
+            <View style={styles.timerControlsRow}>
+              <TouchableOpacity onPress={handleToggleTimer} style={styles.smallTimerControl} activeOpacity={0.8}>
+                {workoutPaused ? <Play size={14} color={colors.text} /> : <Pause size={14} color={colors.text} />}
+              </TouchableOpacity>
+              <TouchableOpacity onPress={handleResetTimer} style={styles.smallTimerControl} activeOpacity={0.8}>
+                <RefreshCw size={14} color={colors.textTertiary} />
+              </TouchableOpacity>
+            </View>
           </View>
 
           <View style={styles.timeStatsColumnAlignRight}>
-            <Text style={styles.timeStatsLabel}>Set</Text>
-            <Text style={styles.timeStatsValue}>2/5</Text>
+            <Text style={[styles.timeStatsLabel, { color: colors.textSecondary }]}>Set</Text>
+            <Text style={[styles.timeStatsValue, { color: colors.text }]}>{`${Math.min(progress.completed + 1, progress.total)}/${progress.total}`}</Text>
           </View>
         </View>
       </View>
@@ -281,6 +331,8 @@ export default function ActiveWorkoutScreen() {
           streakMeta.currentStreak > 0
         }
         onDismiss={handleCelebrationDismiss}
+        actionLabel="Restart Session"
+        onAction={handleRestartSession}
       />
     </View>
   );
@@ -474,6 +526,20 @@ const styles = StyleSheet.create({
     color: '#0A0A0F',
   },
   digitalTimerContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  timerControlsRow: {
+    flexDirection: 'row',
+    marginTop: 6,
+    gap: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  smallTimerControl: {
+    width: 32,
+    height: 28,
+    borderRadius: 6,
     justifyContent: 'center',
     alignItems: 'center',
   },
