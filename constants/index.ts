@@ -17,17 +17,17 @@ export const MUSCLE_GROUPS: MuscleGroup[] = [
 export const DAYS_OF_WEEK: DayOfWeek[] = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
 export const MUSCLE_GROUP_COLORS: Record<MuscleGroup, string> = {
-  Chest: '#FF6B6B',
-  Back: '#4ECDC4',
-  Biceps: '#FFE66D',
-  Triceps: '#C44DFF',
-  Quads: '#45B7D1',
-  Hamstrings: '#96CEB4',
-  Calves: '#FFA07A',
-  Shoulders: '#FF69B4',
-  Abs: '#F7931E',
-  Glutes: '#DDA0DD',
-  Cardio: '#00D4FF',
+  Chest: '#FFC4C4',
+  Back: '#C4FAF8',
+  Biceps: '#FFECA1',
+  Triceps: '#E6CFFF',
+  Quads: '#C4D6FF',
+  Hamstrings: '#C2F9BB',
+  Calves: '#D6FD53',
+  Shoulders: '#FFD6EC',
+  Abs: '#FFECA1',
+  Glutes: '#FFD6EC',
+  Cardio: '#C4FAF8',
 };
 
 export const GRADIENTS = {

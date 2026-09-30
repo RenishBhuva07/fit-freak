@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -10,9 +10,10 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  useWindowDimensions,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { Search, Filter, Trash2, Edit2, X } from 'lucide-react-native';
+import { Search } from 'lucide-react-native';
 import { useTheme } from '@/hooks/useTheme';
 import { useExercises } from '@/hooks/useExercises';
 import { Exercise, MuscleGroup } from '@/types/data';
@@ -25,7 +26,13 @@ import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
 import { useRef } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
-import Animated, { FadeInDown } from 'react-native-reanimated';
+import Animated, {
+  FadeInDown,
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  interpolate,
+} from 'react-native-reanimated';
 
 export default function ExercisesScreen() {
   const { colors, isDark } = useTheme();
@@ -41,6 +48,43 @@ export default function ExercisesScreen() {
     deleteExercise,
   } = useExercises();
 
+  const { width: screenWidth } = useWindowDimensions();
+  const searchProgress = useSharedValue(0);
+  const [isSearchActive, setIsSearchActive] = useState(false);
+
+  const toggleSearch = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    const nextState = !isSearchActive;
+    setIsSearchActive(nextState);
+    if (!nextState) {
+      setSearchQuery('');
+    }
+  };
+
+  useEffect(() => {
+    searchProgress.value = withTiming(isSearchActive ? 1 : 0, { duration: 300 });
+  }, [isSearchActive]);
+
+  const animatedSearchStyle = useAnimatedStyle(() => {
+    const width = interpolate(searchProgress.value, [0, 1], [0, screenWidth - 40]);
+    const height = interpolate(searchProgress.value, [0, 1], [0, 48]);
+    const opacity = interpolate(searchProgress.value, [0, 0.3, 1], [0, 0, 1]);
+    const marginTop = interpolate(searchProgress.value, [0, 1], [0, 4]);
+    const marginBottom = interpolate(searchProgress.value, [0, 1], [0, 8]);
+    const paddingHorizontal = interpolate(searchProgress.value, [0, 1], [0, 16]);
+    const borderWidth = interpolate(searchProgress.value, [0, 1], [0, 1]);
+
+    return {
+      width,
+      height,
+      opacity,
+      marginTop,
+      marginBottom,
+      paddingHorizontal,
+      borderWidth,
+    };
+  });
+
   const addSheetRef = useRef<BottomSheetModal>(null);
   const editSheetRef = useRef<BottomSheetModal>(null);
   const editExerciseId = useRef<string | null>(null);
@@ -51,7 +95,6 @@ export default function ExercisesScreen() {
   const [reps, setReps] = useState('12');
   const [restSeconds, setRestSeconds] = useState('90');
   const [notes, setNotes] = useState('');
-  const [showFilters, setShowFilters] = useState(false);
 
   const sections = Object.entries(exercisesByGroup).map(([group, exs]) => ({
     title: group as string,
@@ -135,6 +178,9 @@ export default function ExercisesScreen() {
   };
 
   const renderSectionHeader = ({ section }: { section: { title: string } }) => {
+    if (selectedMuscleGroup !== null) {
+      return null;
+    }
     const sectionColor = MUSCLE_GROUP_COLORS[section.title as MuscleGroup] || colors.accent;
     return (
       <View
@@ -200,17 +246,36 @@ export default function ExercisesScreen() {
 
   return (
     <GradientBackground>
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: isDark ? BRAND_COLORS.RICH_BLACK : '#ffffff' }]}>
         <StatusBar style={isDark ? 'light' : 'dark'} />
 
         {/* 1. Header (Compact vertical spacing) */}
         <View style={styles.header}>
           <Text style={[styles.title, { color: colors.text }]}>Exercises</Text>
-          <ThemeToggle />
+          <View style={styles.headerActions}>
+            <TouchableOpacity
+              onPress={toggleSearch}
+              style={[
+                styles.headerIconButton,
+                {
+                  backgroundColor: isDark
+                    ? 'rgba(255, 255, 255, 0.04)'
+                    : 'rgba(0, 0, 0, 0.02)',
+                  borderColor: isDark
+                    ? 'rgba(255, 255, 255, 0.06)'
+                    : 'rgba(0, 0, 0, 0.04)',
+                },
+              ]}
+              activeOpacity={0.7}
+            >
+              <Search size={20} color={colors.text} strokeWidth={2.5} />
+            </TouchableOpacity>
+            <ThemeToggle />
+          </View>
         </View>
 
         {/* 2. Compact Search Input */}
-        <View
+        <Animated.View
           style={[
             styles.searchContainer,
             {
@@ -221,6 +286,7 @@ export default function ExercisesScreen() {
                 ? 'rgba(255, 255, 255, 0.06)'
                 : 'rgba(0, 0, 0, 0.04)',
             },
+            animatedSearchStyle,
           ]}
         >
           <Search size={18} color={colors.textTertiary} strokeWidth={2.5} />
@@ -230,69 +296,73 @@ export default function ExercisesScreen() {
             placeholderTextColor={colors.textTertiary}
             value={searchQuery}
             onChangeText={setSearchQuery}
+            editable={isSearchActive}
           />
-          <TouchableOpacity
-            style={[
-              styles.filterButton,
-              selectedMuscleGroup && {
-                backgroundColor: `${colors.accent}20`,
-              },
-            ]}
-            onPress={() => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              setShowFilters(!showFilters);
-            }}
-            activeOpacity={0.7}
-          >
-            <Filter
-              size={18}
-              color={selectedMuscleGroup ? colors.accent : colors.textTertiary}
-              strokeWidth={2.5}
-            />
-          </TouchableOpacity>
-        </View>
+        </Animated.View>
 
         {/* 3. Sleek Single-row Horizontal Capsule Filters */}
-        {showFilters && (
-          <Animated.View entering={FadeInDown.duration(250)}>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.filtersScrollContent}
-              style={styles.filtersScrollView}
+        <View style={styles.filtersContainer}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.filtersScrollContent}
+            style={styles.filtersScrollView}
+          >
+            <TouchableOpacity
+              style={[
+                styles.filterChip,
+                {
+                  backgroundColor: !selectedMuscleGroup ? colors.accent : 'transparent',
+                  borderColor: colors.accent,
+                },
+              ]}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                setSelectedMuscleGroup(null);
+              }}
+              activeOpacity={0.75}
             >
-              <TouchableOpacity
+              <Text
                 style={[
-                  styles.filterChip,
-                  {
-                    backgroundColor: !selectedMuscleGroup ? colors.accent : 'transparent',
-                    borderColor: colors.accent,
-                  },
+                  styles.filterChipText,
+                  { color: !selectedMuscleGroup ? (!isDark ? '#FFFFFF' : '#0A0A0F') : colors.accent },
                 ]}
-                onPress={() => {
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                  setSelectedMuscleGroup(null);
-                }}
-                activeOpacity={0.75}
               >
-                <Text
-                  style={[
-                    styles.filterChipText,
-                    { color: !selectedMuscleGroup ? '#FFFFFF' : colors.accent },
-                  ]}
-                >
-                  All
-                </Text>
-              </TouchableOpacity>
-              {MUSCLE_GROUPS.map((group) => (
+                All
+              </Text>
+            </TouchableOpacity>
+            {MUSCLE_GROUPS.map((group) => {
+              const muscleColor = MUSCLE_GROUP_COLORS[group] || colors.accent;
+              const isSelected = selectedMuscleGroup === group;
+
+              // Dynamically get unselected text/border color for readability
+              const getUnselectedTextColor = (hex: string) => {
+                if (isDark) return hex;
+                const cleaned = hex.replace('#', '');
+                let r = parseInt(cleaned.substr(0, 2), 16);
+                let g = parseInt(cleaned.substr(2, 2), 16);
+                let b = parseInt(cleaned.substr(4, 2), 16);
+                const luminance = 0.2126 * (r/255) + 0.7152 * (g/255) + 0.0722 * (b/255);
+                if (luminance > 0.6) {
+                  r = Math.max(0, Math.floor(r * 0.55));
+                  g = Math.max(0, Math.floor(g * 0.55));
+                  b = Math.max(0, Math.floor(b * 0.55));
+                  return `rgb(${r}, ${g}, ${b})`;
+                }
+                return hex;
+              };
+
+              const activeColor = muscleColor;
+              const unselectedColor = getUnselectedTextColor(muscleColor);
+
+              return (
                 <TouchableOpacity
                   key={group}
                   style={[
                     styles.filterChip,
                     {
-                      backgroundColor:
-                        selectedMuscleGroup === group ? colors.accent : 'transparent',
-                      borderColor: colors.accent,
+                      backgroundColor: isSelected ? activeColor : 'transparent',
+                      borderColor: unselectedColor,
                     },
                   ]}
                   onPress={() => {
@@ -304,16 +374,16 @@ export default function ExercisesScreen() {
                   <Text
                     style={[
                       styles.filterChipText,
-                      { color: selectedMuscleGroup === group ? '#FFFFFF' : colors.accent },
+                      { color: isSelected ? '#0A0A0F' : unselectedColor },
                     ]}
                   >
                     {group}
                   </Text>
                 </TouchableOpacity>
-              ))}
-            </ScrollView>
-          </Animated.View>
-        )}
+              );
+            })}
+          </ScrollView>
+        </View>
 
         {/* 4. Section List with sticky glass headers */}
         <SectionList
@@ -365,39 +435,41 @@ export default function ExercisesScreen() {
               Muscle Group
             </Text>
             <View style={styles.chipScroll}>
-              {MUSCLE_GROUPS.map((group) => (
-                <TouchableOpacity
-                  key={group}
-                  style={[
-                    styles.chip,
-                    {
-                      backgroundColor:
-                        muscleGroup === group
-                          ? colors.accent
+              {MUSCLE_GROUPS.map((group) => {
+                const muscleColor = MUSCLE_GROUP_COLORS[group as MuscleGroup] || colors.accent;
+                const isSelected = muscleGroup === group;
+                return (
+                  <TouchableOpacity
+                    key={group}
+                    style={[
+                      styles.chip,
+                      {
+                        backgroundColor: isSelected
+                          ? muscleColor
                           : isDark
                             ? 'rgba(255, 255, 255, 0.04)'
                             : 'rgba(0, 0, 0, 0.02)',
-                      borderColor:
-                        muscleGroup === group
-                          ? colors.accent
+                        borderColor: isSelected
+                          ? muscleColor
                           : isDark
                             ? 'rgba(255, 255, 255, 0.06)'
                             : 'rgba(0, 0, 0, 0.04)',
-                    },
-                  ]}
-                  onPress={() => setMuscleGroup(group)}
-                  activeOpacity={0.75}
-                >
-                  <Text
-                    style={[
-                      styles.chipText,
-                      { color: muscleGroup === group ? '#FFFFFF' : colors.text },
+                      },
                     ]}
+                    onPress={() => setMuscleGroup(group)}
+                    activeOpacity={0.75}
                   >
-                    {group}
-                  </Text>
-                </TouchableOpacity>
-              ))}
+                    <Text
+                      style={[
+                        styles.chipText,
+                        { color: isSelected ? '#0A0A0F' : colors.text },
+                      ]}
+                    >
+                      {group}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
             </View>
 
             <View style={styles.row}>
@@ -542,39 +614,41 @@ export default function ExercisesScreen() {
               Muscle Group
             </Text>
             <View style={styles.chipScroll}>
-              {MUSCLE_GROUPS.map((group) => (
-                <TouchableOpacity
-                  key={group}
-                  style={[
-                    styles.chip,
-                    {
-                      backgroundColor:
-                        muscleGroup === group
-                          ? colors.accent
+              {MUSCLE_GROUPS.map((group) => {
+                const muscleColor = MUSCLE_GROUP_COLORS[group as MuscleGroup] || colors.accent;
+                const isSelected = muscleGroup === group;
+                return (
+                  <TouchableOpacity
+                    key={group}
+                    style={[
+                      styles.chip,
+                      {
+                        backgroundColor: isSelected
+                          ? muscleColor
                           : isDark
                             ? 'rgba(255, 255, 255, 0.04)'
                             : 'rgba(0, 0, 0, 0.02)',
-                      borderColor:
-                        muscleGroup === group
-                          ? colors.accent
+                        borderColor: isSelected
+                          ? muscleColor
                           : isDark
                             ? 'rgba(255, 255, 255, 0.06)'
                             : 'rgba(0, 0, 0, 0.04)',
-                    },
-                  ]}
-                  onPress={() => setMuscleGroup(group)}
-                  activeOpacity={0.75}
-                >
-                  <Text
-                    style={[
-                      styles.chipText,
-                      { color: muscleGroup === group ? '#FFFFFF' : colors.text },
+                      },
                     ]}
+                    onPress={() => setMuscleGroup(group)}
+                    activeOpacity={0.75}
                   >
-                    {group}
-                  </Text>
-                </TouchableOpacity>
-              ))}
+                    <Text
+                      style={[
+                        styles.chipText,
+                        { color: isSelected ? '#0A0A0F' : colors.text },
+                      ]}
+                    >
+                      {group}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
             </View>
 
             <View style={styles.row}>
@@ -696,6 +770,19 @@ const styles = StyleSheet.create({
     paddingTop: Platform.OS === 'ios' ? 72 : 52,
     paddingBottom: 8,
   },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  headerIconButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+  },
   title: {
     fontSize: 28,
     fontFamily: FONTS.display,
@@ -704,14 +791,10 @@ const styles = StyleSheet.create({
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    marginHorizontal: 20,
-    marginTop: 4,
-    marginBottom: 8,
     borderRadius: 16,
     gap: 12,
-    borderWidth: 1,
+    alignSelf: 'center',
+    overflow: 'hidden',
   },
   searchInput: {
     flex: 1,
@@ -719,9 +802,8 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.medium,
     fontWeight: '500',
   },
-  filterButton: {
-    padding: 8,
-    borderRadius: 10,
+  filtersContainer: {
+    marginBottom: 6,
   },
   filtersScrollView: {
     marginBottom: 10,

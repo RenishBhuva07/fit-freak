@@ -654,10 +654,9 @@ const styles = StyleSheet.create({
     paddingBottom: 16,
   },
   title: {
-    fontSize: 34,
+    fontSize: 28,
     fontFamily: FONTS.display,
     fontWeight: '800',
-    letterSpacing: -0.5,
   },
   centerContent: {
     flex: 1,

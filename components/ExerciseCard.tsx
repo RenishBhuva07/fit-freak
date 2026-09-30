@@ -1,5 +1,5 @@
 import { View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native';
-import { Check, Clock, Edit2, Trash2, Award } from 'lucide-react-native';
+import { Check, Clock, Edit2, Trash2, Award, Dumbbell, Shield, Zap, Flame, Heart, Activity } from 'lucide-react-native';
 import { Exercise } from '@/types/data';
 import { MUSCLE_GROUP_COLORS, FONTS, BRAND_COLORS } from '@/constants';
 import { useTheme } from '@/hooks/useTheme';
@@ -36,6 +36,20 @@ const LOTTIE_URLS: Record<string, string> = {
   Cardio: 'https://assets5.lottiefiles.com/packages/lf20_5n8ybb.json',
 };
 
+const WATERMARK_ICONS: Record<string, any> = {
+  Chest: Dumbbell,
+  Back: Shield,
+  Biceps: Dumbbell,
+  Triceps: Dumbbell,
+  Quads: Zap,
+  Hamstrings: Zap,
+  Calves: Zap,
+  Shoulders: Shield,
+  Abs: Activity,
+  Glutes: Heart,
+  Cardio: Flame,
+};
+
 // Sleek fallback custom Svg Barbell component
 const BarbellSvg = ({ color }: { color: string }) => (
   <Svg width="36" height="36" viewBox="0 0 24 24" fill="none">
@@ -65,6 +79,22 @@ export function ExerciseCard({
   const { colors, isDark } = useTheme();
   const muscleColor = MUSCLE_GROUP_COLORS[exercise.muscleGroup] || colors.accent;
 
+  const isLightBackground = (() => {
+    const cleaned = muscleColor.replace('#', '');
+    const r = parseInt(cleaned.substr(0, 2), 16) / 255;
+    const g = parseInt(cleaned.substr(2, 2), 16) / 255;
+    const b = parseInt(cleaned.substr(4, 2), 16) / 255;
+    const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+    return luminance > 0.6;
+  })();
+
+  const textColor = isLightBackground ? '#0A0A0F' : '#FFFFFF';
+  const textSecondaryColor = isLightBackground ? 'rgba(10, 10, 15, 0.65)' : 'rgba(255, 255, 255, 0.7)';
+  const textTertiaryColor = isLightBackground ? 'rgba(10, 10, 15, 0.5)' : 'rgba(255, 255, 255, 0.5)';
+  const badgeBg = isLightBackground ? 'rgba(10, 10, 15, 0.08)' : 'rgba(255, 255, 255, 0.15)';
+  const dividerColor = isLightBackground ? 'rgba(10, 10, 15, 0.08)' : 'rgba(255, 255, 255, 0.15)';
+  const innerBg = isLightBackground ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.1)';
+
   return (
     <View style={{ width: '100%' }}>
       <TouchableOpacity
@@ -74,14 +104,12 @@ export function ExerciseCard({
         style={[
           styles.shadowContainer,
           {
-            backgroundColor: Platform.OS === 'android'
-              ? (isDark ? BRAND_COLORS.CHARCOAL_CARD : '#ffffff')
-              : (isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(255, 255, 255, 0.85)'),
+            backgroundColor: muscleColor,
             ...Platform.select({
               ios: {
-                shadowColor: highlighted ? colors.accent : '#000000',
-                shadowOpacity: highlighted ? 0.18 : 0.04,
-                shadowRadius: highlighted ? 12 : 8,
+                shadowColor: '#000000',
+                shadowOpacity: highlighted ? 0.12 : 0.06,
+                shadowRadius: highlighted ? 12 : 10,
                 shadowOffset: { width: 0, height: highlighted ? 6 : 4 },
               },
               android: {
@@ -95,17 +123,24 @@ export function ExerciseCard({
           style={[
             styles.innerContainer,
             {
-              backgroundColor: Platform.OS === 'android'
-                ? (isDark ? BRAND_COLORS.CHARCOAL_CARD : '#ffffff')
-                : (isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(255, 255, 255, 0.85)'),
+              backgroundColor: muscleColor,
               borderColor: highlighted
-                ? colors.accent
-                : isDark
-                  ? 'rgba(255, 255, 255, 0.06)'
-                  : 'rgba(0, 0, 0, 0.05)',
+                ? (isLightBackground ? 'rgba(10, 10, 15, 0.4)' : 'rgba(255, 255, 255, 0.6)')
+                : dividerColor,
             },
           ]}
         >
+          {/* Background watermark icon */}
+          {(() => {
+            const IconComponent = WATERMARK_ICONS[exercise.muscleGroup] || Activity;
+            const watermarkColor = isLightBackground ? 'rgba(10, 10, 15, 0.05)' : 'rgba(255, 255, 255, 0.08)';
+            return (
+              <View style={styles.backgroundIcon} pointerEvents="none">
+                <IconComponent size={96} color={watermarkColor} strokeWidth={1.4} />
+              </View>
+            );
+          })()}
+
           {/* Main Card Content Layout */}
           <View style={styles.topRow}>
 
@@ -115,14 +150,14 @@ export function ExerciseCard({
                 style={[
                   styles.visualFrame,
                   {
-                    borderColor: highlighted ? colors.accent : colors.border,
-                    backgroundColor: colors.backgroundSecondary,
+                    borderColor: dividerColor,
+                    backgroundColor: innerBg,
                   },
                 ]}
               >
-                <View style={[styles.visualGlow, { backgroundColor: `${muscleColor}15` }]} />
+                <View style={[styles.visualGlow, { backgroundColor: isLightBackground ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)' }]} />
                 <View style={styles.fallbackIcon}>
-                  <BarbellSvg color={muscleColor} />
+                  <BarbellSvg color={textColor} />
                 </View>
               </View>
             </View>
@@ -135,26 +170,24 @@ export function ExerciseCard({
                   style={[
                     styles.badge,
                     {
-                      backgroundColor: isDark
-                        ? `${muscleColor}18`
-                        : `${muscleColor}10`,
+                      backgroundColor: badgeBg,
                     },
                   ]}
                 >
-                  <Text style={[styles.badgeText, { color: muscleColor }]}>
+                  <Text style={[styles.badgeText, { color: textColor }]}>
                     {exercise.muscleGroup.toUpperCase()}
                   </Text>
                 </View>
                 {exercise.isCustom && (
-                  <View style={[styles.customBadge, { backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)' }]}>
-                    <Text style={[styles.customBadgeText, { color: colors.textSecondary }]}>CUSTOM</Text>
+                  <View style={[styles.customBadge, { backgroundColor: badgeBg }]}>
+                    <Text style={[styles.customBadgeText, { color: textSecondaryColor }]}>CUSTOM</Text>
                   </View>
                 )}
               </View>
 
               {/* Exercise Name */}
               <Text
-                style={[styles.name, { color: colors.text }]}
+                style={[styles.name, { color: textColor }]}
                 numberOfLines={1}
               >
                 {exercise.name}
@@ -162,22 +195,22 @@ export function ExerciseCard({
 
               {/* Set/Reps & Rest Stats */}
               <View style={styles.statsRow}>
-                <View style={[styles.statPill, { backgroundColor: colors.backgroundSecondary }]}>
-                  <Text style={[styles.statValue, { color: colors.text }]}>
-                    {exercise.sets} <Text style={[styles.statLabel, { color: colors.textTertiary }]}>SETS</Text>
+                <View style={[styles.statPill, { backgroundColor: badgeBg }]}>
+                  <Text style={[styles.statValue, { color: textColor }]}>
+                    {exercise.sets} <Text style={[styles.statLabel, { color: textSecondaryColor }]}>SETS</Text>
                   </Text>
                 </View>
 
-                <View style={[styles.statPill, { backgroundColor: colors.backgroundSecondary }]}>
-                  <Text style={[styles.statValue, { color: colors.text }]}>
-                    {exercise.reps} <Text style={[styles.statLabel, { color: colors.textTertiary }]}>REPS</Text>
+                <View style={[styles.statPill, { backgroundColor: badgeBg }]}>
+                  <Text style={[styles.statValue, { color: textColor }]}>
+                    {exercise.reps} <Text style={[styles.statLabel, { color: textSecondaryColor }]}>REPS</Text>
                   </Text>
                 </View>
 
                 {exercise.restSeconds > 0 && (
                   <View style={styles.restContainer}>
-                    <Clock size={12} color={colors.textTertiary} strokeWidth={2} />
-                    <Text style={[styles.restText, { color: colors.textTertiary }]}>
+                    <Clock size={12} color={textSecondaryColor} strokeWidth={2} />
+                    <Text style={[styles.restText, { color: textSecondaryColor }]}>
                       {exercise.restSeconds}s
                     </Text>
                   </View>
@@ -196,24 +229,20 @@ export function ExerciseCard({
                   style={[
                     styles.actionButton,
                     {
-                      backgroundColor: isDark
-                        ? 'rgba(255, 255, 255, 0.05)'
-                        : 'rgba(0, 0, 0, 0.03)',
-                      borderColor: isDark
-                        ? 'rgba(255, 255, 255, 0.06)'
-                        : 'rgba(0, 0, 0, 0.05)',
+                      backgroundColor: badgeBg,
+                      borderColor: dividerColor,
                     },
                   ]}
                   activeOpacity={0.7}
                 >
-                  <Edit2 size={13} color={colors.textSecondary} strokeWidth={2.5} />
+                  <Edit2 size={13} color={textSecondaryColor} strokeWidth={2.5} />
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[
                     styles.actionButton,
                     {
-                      backgroundColor: `${colors.error}12`,
-                      borderColor: `${colors.error}25`,
+                      backgroundColor: isLightBackground ? 'rgba(239, 68, 68, 0.15)' : 'rgba(239, 68, 68, 0.25)',
+                      borderColor: 'rgba(239, 68, 68, 0.3)',
                     },
                   ]}
                   onPress={(e) => {
@@ -222,7 +251,7 @@ export function ExerciseCard({
                   }}
                   activeOpacity={0.7}
                 >
-                  <Trash2 size={13} color={colors.error} strokeWidth={2.5} />
+                  <Trash2 size={13} color={isLightBackground ? '#D01010' : '#FF8080'} strokeWidth={2.5} />
                 </TouchableOpacity>
               </View>
             ) : showBadge && !reserveActionSpace && !showCompleteButton ? (
@@ -242,13 +271,11 @@ export function ExerciseCard({
               style={[
                 styles.notesContainer,
                 {
-                  borderTopColor: isDark
-                    ? 'rgba(255, 255, 255, 0.04)'
-                    : 'rgba(0, 0, 0, 0.03)',
+                  borderTopColor: dividerColor,
                 },
               ]}
             >
-              <Text style={[styles.notesText, { color: colors.textSecondary }]} numberOfLines={2}>
+              <Text style={[styles.notesText, { color: textSecondaryColor }]} numberOfLines={2}>
                 “{exercise.notes}”
               </Text>
             </View>
@@ -293,14 +320,23 @@ export function ExerciseCard({
 
 const styles = StyleSheet.create({
   shadowContainer: {
-    borderRadius: 24,
+    borderRadius: 22,
     marginBottom: 12,
   },
   innerContainer: {
-    borderRadius: 24,
+    borderRadius: 22,
     borderWidth: 1,
     overflow: 'hidden',
     padding: 14,
+    position: 'relative',
+  },
+  backgroundIcon: {
+    position: 'absolute',
+    right: -10,
+    bottom: -12,
+    opacity: 0.85,
+    transform: [{ rotate: '-15deg' }],
+    zIndex: 0,
   },
   topRow: {
     flexDirection: 'row',
